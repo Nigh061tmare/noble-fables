@@ -67,3 +67,33 @@ namespace Pecera.Tests
         }
     }
 }
+
+namespace Pecera.Tests
+{
+    public class ConfigMigracionTests
+    {
+        [Fact]
+        public void Config_v1_conserva_lo_seguro_y_apaga_las_escrituras_sin_verificar()
+        {
+            // El config.txt real de la version anterior (datos-muestra/config.txt).
+            string v1 = "modelo=qwen9b-silly:latest\numbral_habla=1.5\ngap_voz=40\nfps_log=1\ninfluencia=1\ninfluencia_max=0.25\nburbujas=0\n";
+            var cambios = new System.Collections.Generic.List<string>();
+            var nuevo = PeceraConfig.Parse(PeceraConfig.Migra(v1, cambios));
+            Assert.Equal("qwen9b-silly:latest", nuevo.Str("modelo"));
+            Assert.Equal(1.5, nuevo.Num("umbral_habla")); Assert.Equal(40, nuevo.Int("gap_voz"));
+            Assert.True(nuevo.Bool("fps_log")); Assert.False(nuevo.Bool("burbujas"));
+            Assert.False(nuevo.Bool("influencia"));
+            Assert.Equal(2, nuevo.Int("config_version"));
+            Assert.Single(cambios); Assert.Contains("influencia", cambios[0]);
+            Assert.Empty(nuevo.Avisos);
+        }
+
+        [Fact]
+        public void Una_escritura_ya_apagada_o_con_su_valor_por_defecto_no_se_reporta()
+        {
+            var cambios = new System.Collections.Generic.List<string>();
+            PeceraConfig.Migra("influencia=0\n", cambios);
+            Assert.Empty(cambios);
+        }
+    }
+}

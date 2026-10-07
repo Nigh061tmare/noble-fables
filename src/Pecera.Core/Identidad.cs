@@ -151,11 +151,23 @@ namespace Pecera.Core
                 object d;
                 if (!Json.TryParse(l, out d)) continue;
                 string k = Json.Str(d, "k"), id = Json.Str(d, "id");
-                if (k.Length > 0 && id.Length > 0) { claveAId[k] = id; nombres[id] = Json.Str(d, "n"); }
+                if (k.Length > 0 && id.Length > 0)
+                {
+                    claveAId[k] = id; nombres[id] = Json.Str(d, "n");
+                    if (k.StartsWith("g:", StringComparison.Ordinal)) claveDeNombrePrevio[Json.Str(d, "n")] = k;
+                }
             }
         }
 
         public int Ambiguos { get { lock (cerrojo) { return ambiguos.Count; } } }
+
+        // Evidencia de que la clave del juego es ESTABLE entre sesiones: al ver un pawn con
+        // clave estable cuyo nombre ya estaba registrado de una sesion anterior, la clave
+        // coincide (id estable) o no (el juego renumera: no sirve como id).
+        public int ClavesCoinciden { get; private set; }
+        public int ClavesDiscrepan { get; private set; }
+        readonly HashSet<string> comprobados = new HashSet<string>();
+        readonly Dictionary<string, string> claveDeNombrePrevio = new Dictionary<string, string>();
 
         // claveEstable: id persistente del juego si se encontro, o null.
         // manejadorSesion: p. ej. GetHashCode() del objeto, solo valido durante la sesion.
@@ -179,6 +191,11 @@ namespace Pecera.Core
                         if (idx > 0) key = baseKey + "#" + (idx + 1);
                         ambiguos.Add(baseKey);
                     }
+                }
+                if (estable && comprobados.Add(key))
+                {
+                    string previa;
+                    if (claveDeNombrePrevio.TryGetValue(nombre, out previa)) { if (previa == key) ClavesCoinciden++; else ClavesDiscrepan++; }
                 }
                 string id;
                 if (!claveAId.TryGetValue(key, out id))

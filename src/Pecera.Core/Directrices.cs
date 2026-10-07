@@ -53,6 +53,17 @@ namespace Pecera.Core
             return d;
         }
 
+        // Vuelve a texto de directriz.txt (se puede releer con Parse sin perdida).
+        public string Render()
+        {
+            var sb = new StringBuilder();
+            sb.Append("# Directrices del reino. Secciones: [faccion:Nombre] y [pawn:Nombre]. Las lineas con # se ignoran.\n");
+            if (Global.Length > 0) sb.Append(Global).Append('\n');
+            foreach (var kv in PorFaccion) sb.Append("[faccion:").Append(kv.Key).Append("]\n").Append(kv.Value).Append('\n');
+            foreach (var kv in PorPawn) sb.Append("[pawn:").Append(kv.Key).Append("]\n").Append(kv.Value).Append('\n');
+            return sb.ToString();
+        }
+
         static string Cut(string s)
         {
             s = Json.UnaLinea(s);

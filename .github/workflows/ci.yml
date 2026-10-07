@@ -1,0 +1,20 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Core + tests + simulador (C# 5 estricto en Core, avisos = errores)
+        run: dotnet test tests/Pecera.Tests --nologo
+      - name: Adaptadores del juego contra stubs (net48, C# 5, avisos = errores)
+        run: dotnet build stubs/Pecera.Game.Check --nologo
+      - name: Simulador, un anio completo
+        run: dotnet run --project sim/Pecera.Sim -- --dias 360 --seed 1 --out sim_out
+      - name: Herramienta A/B (python)
+        run: python3 -c "import sys; sys.path.insert(0,'herramientas'); import pecera_ab"

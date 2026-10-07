@@ -71,6 +71,7 @@ namespace Pecera.Tests
                 m.AplicaResumen(m.PreparaResumen("p1"), "res" + k);
             }
             Assert.True(m.NecesitaFusion("p1"));
+            Assert.Equal("p1", m.SiguienteParaFusionar());
             m.AplicaFusion("p1", "De larga data: rencores y deudas");
             Assert.Equal(0, m.NivelesMedio("p1"));
             Assert.Equal("De larga data: rencores y deudas", Nueva(d, c).Largo("p1"));
@@ -176,6 +177,26 @@ namespace Pecera.Tests
         {
             var f = FichaGen.Determinista("p9", "Zed");
             Assert.Equal(f.ToJson(), Ficha.FromJson(f.ToJson()).ToJson());
+        }
+    }
+}
+
+namespace Pecera.Tests
+{
+    public class IdentidadEvidenciaTests
+    {
+        [Fact]
+        public void Detecta_si_la_clave_del_juego_es_estable_entre_sesiones()
+        {
+            var d = new MemoryStorage();
+            var s1 = new RegistroIds(d);
+            s1.Resuelve("77", "Ana", 1); s1.Resuelve("88", "Beto", 2);
+            var s2 = new RegistroIds(d);                       // reinicio, el juego conserva los ids
+            s2.Resuelve("77", "Ana", 5); s2.Resuelve("88", "Beto", 6);
+            Assert.Equal(2, s2.ClavesCoinciden); Assert.Equal(0, s2.ClavesDiscrepan);
+            var s3 = new RegistroIds(d);                       // otro reinicio: el juego renumera
+            s3.Resuelve("1", "Ana", 5);
+            Assert.Equal(1, s3.ClavesDiscrepan);
         }
     }
 }

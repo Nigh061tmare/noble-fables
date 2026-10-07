@@ -388,6 +388,26 @@ namespace Pecera.Tests
         }
 
         [Fact]
+        public void Render_y_Parse_son_inversos()
+        {
+            var d = Directrices.Parse("paz\n[faccion:Casa de Ana]\nconquista\n[pawn:Beto]\nhumildad\n");
+            var d2 = Directrices.Parse(d.Render());
+            Assert.Equal(d.Global, d2.Global);
+            Assert.Equal("conquista", d2.PorFaccion["Casa de Ana"]);
+            Assert.Equal("humildad", d2.PorPawn["Beto"]);
+        }
+
+        [Fact]
+        public void Config_Set_valida_y_cambia_en_caliente()
+        {
+            var c = PeceraConfig.Parse(""); string err;
+            Assert.True(c.Set("modo", "observador", out err));
+            Assert.False(c.PuedeEscribir("influencia"));
+            Assert.False(c.Set("gap_voz", "1", out err)); Assert.Contains("invalido", err);
+            Assert.False(c.Set("nada", "1", out err));
+        }
+
+        [Fact]
         public void Directriz_se_acota_a_400()
         {
             Assert.True(Directrices.Parse(new string('x', 1000)).Global.Length <= 400);

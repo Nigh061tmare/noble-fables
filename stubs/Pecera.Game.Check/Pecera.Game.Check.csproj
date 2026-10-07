@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Comprueba en CI que src/Pecera.Game + Pecera.Core compilan juntos contra stubs, con la
+       MISMA version de lenguaje (C# 5) que el csc.exe de .NET Framework 4 del PC del autor.
+       NO sustituye a compilar.ps1: los stubs no son el juego. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>5</LangVersion>
+    <OutputType>Library</OutputType>
+    <AssemblyName>PeceraNF.Check</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Stubs.cs" />
+    <Compile Include="../../src/Pecera.Game/**/*.cs" />
+    <Compile Include="../../src/Pecera.Core/**/*.cs" Exclude="../../src/Pecera.Core/obj/**;../../src/Pecera.Core/bin/**" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

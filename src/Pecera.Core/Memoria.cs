@@ -164,6 +164,15 @@ namespace Pecera.Core
             lock (cerrojo) { Pawn p; return por.TryGetValue(id, out p) && p.Medio.Count > MaxMedio; }
         }
 
+        public string SiguienteParaFusionar()
+        {
+            lock (cerrojo)
+            {
+                foreach (var kv in por) if (kv.Value.Medio.Count > MaxMedio) return kv.Key;
+                return null;
+            }
+        }
+
         public string TextoParaFusion(string id)
         {
             lock (cerrojo)

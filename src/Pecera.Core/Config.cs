@@ -40,6 +40,7 @@ namespace Pecera.Core
         {
             var l = new List<ConfigEntry>();
             // --- voz (verificado en partida: hook y frases) ---
+            l.Add(E("config_version", "2", "Version del formato de este fichero. No lo cambies.", true, 1, 99, false, Estado.Verificado));
             l.Add(E("modelo", "qwen4b-silly:latest", "Modelo de Ollama. Medidos: qwen4b-silly / qwen9b-silly / mimo-9b:q4 / mistral-nemo.", false, 0, 0, false, Estado.Verificado));
             l.Add(E("keep_alive", "15m", "Cuanto sigue el modelo en VRAM tras la ultima peticion.", false, 0, 0, false, Estado.Verificado));
             l.Add(E("umbral_dato", "0.5", "|cambio| minimo para registrar el evento en opiniones.jsonl.", true, 0.05, 10, false, Estado.Verificado));
@@ -47,6 +48,11 @@ namespace Pecera.Core
             l.Add(E("umbral_rasgo", "2", "|cambio| minimo para hablar por un RASGO (es Orco, esta Malo): ruido.", true, 0.05, 50, false, Estado.Verificado));
             l.Add(E("gap_voz", "25", "Segundos minimos entre dos frases (global). Minimo 5.", true, 5, 3600, false, Estado.Verificado));
             l.Add(E("fps_log", "0", "1 escribe fps.csv cada 5 s (solo diagnostico).", true, 0, 1, false, Estado.Verificado));
+            l.Add(E("activo", "1", "0 deja el mod inerte (no parchea nada): para el A/B del coste ON/OFF. fps_log sigue funcionando.", true, 0, 1, false, Estado.NoVerificado));
+            l.Add(E("dia_segundos", "120", "Segundos de reloj que equivalen a un dia de juego para el modelo afectivo (la API de tiempo del juego esta pendiente de confirmar).", true, 10, 86400, false, Estado.NoVerificado));
+            l.Add(E("resumen_gap_s", "90", "Segundos minimos entre dos resumenes de memoria con el LLM.", true, 20, 3600, false, Estado.NoVerificado));
+            l.Add(E("informe_min", "5", "Minutos entre escrituras de informe.md, cronica.md y grafo.dot.", true, 1, 240, false, Estado.NoVerificado));
+            l.Add(E("confirmar_version", "", "Version del juego que el usuario acepta tras una actualizacion (desbloquea las escrituras).", false, 0, 0, false, Estado.NoVerificado));
             // --- escrituras al juego: SIN verificar -> apagadas por defecto ---
             l.Add(E("influencia", "0", "1: la actitud de la frase empuja la opinion en el juego (ESCRIBE). Sin verificar en partida.", true, 0, 1, true, Estado.NoVerificado));
             l.Add(E("influencia_max", "0.25", "Tope del empujon por frase.", true, 0, 1, true, Estado.NoVerificado));
@@ -111,6 +117,22 @@ namespace Pecera.Core
             return c;
         }
 
+        // Cambio en caliente (consola). Valida igual que Parse. No toca el fichero.
+        public bool Set(string key, string valor, out string error)
+        {
+            error = "";
+            ConfigEntry e;
+            if (!byKey.TryGetValue(key, out e)) { error = "clave desconocida: " + key; return false; }
+            if (e.Numeric)
+            {
+                double d;
+                if (!double.TryParse(valor, NumberStyles.Float, CultureInfo.InvariantCulture, out d) || d < e.Min || d > e.Max)
+                { error = "valor invalido para " + key + ": " + valor; return false; }
+            }
+            vals[key] = valor;
+            return true;
+        }
+
         public string Str(string key)
         {
             string v;
@@ -151,7 +173,33 @@ namespace Pecera.Core
             return Bool(interruptor);
         }
 
-        public static string RenderDefault()
+        public const int VersionActual = 2;
+
+        // Migracion de un config.txt de la version 1 (sin config_version): se conservan los
+        // valores de las claves que NO escriben en el juego y se descartan las que si
+        // (influencia venia a 1 por defecto, sin haberse verificado en partida: vuelve a 0).
+        public static string Migra(string textoViejo, IList<string> cambios)
+        {
+            var viejo = Parse(textoViejo);
+            var over = new Dictionary<string, string>();
+            foreach (var e in schema)
+            {
+                if (e.Key == "config_version") continue;
+                string v;
+                if (!viejo.vals.TryGetValue(e.Key, out v)) continue;
+                if (e.EscribeJuego && v != e.Default)
+                {
+                    if (cambios != null) cambios.Add(e.Key + "=" + v + " -> " + e.Default + " (escribe en el juego y no esta verificado)");
+                    continue;
+                }
+                over[e.Key] = v;
+            }
+            return Render(over);
+        }
+
+        public static string RenderDefault() { return Render(null); }
+
+        public static string Render(Dictionary<string, string> over)
         {
             var sb = new StringBuilder();
             sb.Append("# Ajustes de Pecera. Edita y reinicia el juego.\n");
@@ -163,7 +211,9 @@ namespace Pecera.Core
                 sb.Append(" [").Append(e.Estado == Estado.Verificado ? "VERIFICADO" : e.Estado == Estado.Leido ? "LEIDO" : "NO VERIFICADO");
                 if (e.EscribeJuego) sb.Append(", escribe en el juego");
                 sb.Append("]\n");
-                sb.Append(e.Key).Append('=').Append(e.Default).Append("\n\n");
+                string v;
+                if (over == null || e.Key == "config_version" || !over.TryGetValue(e.Key, out v)) v = e.Default;
+                sb.Append(e.Key).Append('=').Append(v).Append("\n\n");
             }
             return sb.ToString();
         }
