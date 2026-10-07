@@ -24,7 +24,6 @@ namespace PeceraNF
     // =========================================================================
     public static class Gancho
     {
-        public const double UmbralDatoDefecto = 0.5;
         const int FRENO_SEGUNDOS = 20;               // anti-rafaga por pawn
         static int Llamadas;
         static int Registrados;
@@ -285,10 +284,10 @@ namespace PeceraNF
             try
             {
                 var t = subject.GetType();
-                var pr = t.GetProperty("pawn", Aux.TODO);
+                var pr = t.GetProperty("pawn", Aux.Todos);
                 if (pr != null) { var pp = pr.GetValue(subject, null) as Pawn; if (pp != null) return pp; }
                 for (; t != null; t = t.BaseType)
-                    foreach (var f in t.GetFields(Aux.TODO | BindingFlags.DeclaredOnly))
+                    foreach (var f in t.GetFields(Aux.Todos | BindingFlags.DeclaredOnly))
                     {
                         if (!typeof(Pawn).IsAssignableFrom(f.FieldType)) continue;
                         var v = f.GetValue(subject) as Pawn;
@@ -318,7 +317,7 @@ namespace PeceraNF
             try
             {
                 for (var t = reason.GetType(); t != null; t = t.BaseType)
-                    foreach (var f in t.GetFields(Aux.TODO | BindingFlags.DeclaredOnly))
+                    foreach (var f in t.GetFields(Aux.Todos | BindingFlags.DeclaredOnly))
                     {
                         if (!f.Name.EndsWith("k__BackingField", StringComparison.Ordinal)) continue;
                         var v = f.GetValue(reason);
@@ -343,7 +342,7 @@ namespace PeceraNF
                 if (!_mOpinionBuscado)
                 {
                     _mOpinionBuscado = true;
-                    _mOpinion = typeof(Pawn).GetMethod("GetOpinionValue", Aux.TODO, null, new[] { typeof(ISubjectOrCompound), typeof(bool) }, null);
+                    _mOpinion = typeof(Pawn).GetMethod("GetOpinionValue", Aux.Todos, null, new[] { typeof(ISubjectOrCompound), typeof(bool) }, null);
                 }
                 var subj = of as ISubjectOrCompound;
                 if (subj == null || _mOpinion == null) return null;
@@ -356,6 +355,6 @@ namespace PeceraNF
 
     public static class Aux
     {
-        public const BindingFlags TODO = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        public const BindingFlags Todos = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     }
 }

@@ -124,6 +124,17 @@ namespace Pecera.Tests
         }
 
         [Fact]
+        public void Un_par_que_vuelve_a_su_baseline_se_olvida()
+        {
+            var m = M();
+            m.Evento("a", "b", TipoEvento.Agravio, 0.5);
+            Assert.Equal(1, m.Pares);
+            m.Avanza(2000);
+            Assert.Equal(0, m.Pares);
+            Assert.Equal(0, m.Get("a", "b").Rencor);
+        }
+
+        [Fact]
         public void Serializa_y_carga_sin_perdida()
         {
             var m = M(); var r = new Rng(3);

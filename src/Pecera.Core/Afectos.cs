@@ -163,6 +163,7 @@ namespace Pecera.Core
         public void Avanza(double dias)
         {
             if (dias <= 0) return;
+            List<string> muertos = null;
             foreach (var kv in pares)
             {
                 string a, b; Separa(kv.Key, out a, out b);
@@ -179,7 +180,19 @@ namespace Pecera.Core
                 Decae(ref p.Romance, 0, TauRomance, dias);
                 Decae(ref p.Trauma, 0, TauTrauma, dias);
                 if (p.Rencor > Par.UmbralRencor) p.DiasRencorAlto += dias; else p.DiasRencorAlto = 0;
+                if (EnBaseline(p)) { if (muertos == null) muertos = new List<string>(); muertos.Add(kv.Key); }
             }
+            // Un par que ha vuelto a su baseline no aporta nada: se olvida para que el modelo
+            // solo pague por las relaciones activas (con n pawns podria haber n^2 pares).
+            if (muertos != null) foreach (var k in muertos) pares.Remove(k);
+        }
+
+        const double Eps = 1e-3;
+
+        static bool EnBaseline(Par p)
+        {
+            return Math.Abs(p.Afecto) < Eps && Math.Abs(p.Confianza - 0.5) < Eps && p.Rencor < Eps && Math.Abs(p.Deuda) < Eps
+                && p.Rivalidad < Eps && p.Romance < Eps && p.Trauma < Eps;
         }
 
         // Sentimiento neto de A hacia B, en [-1,1]: lo que A "siente" por B ahora.

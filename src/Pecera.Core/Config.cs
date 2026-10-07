@@ -129,14 +129,14 @@ namespace Pecera.Core
                 if (!double.TryParse(valor, NumberStyles.Float, CultureInfo.InvariantCulture, out d) || d < e.Min || d > e.Max)
                 { error = "valor invalido para " + key + ": " + valor; return false; }
             }
-            vals[key] = valor;
+            lock (vals) { vals[key] = valor; }
             return true;
         }
 
         public string Str(string key)
         {
             string v;
-            if (vals.TryGetValue(key, out v)) return v;
+            lock (vals) { if (vals.TryGetValue(key, out v)) return v; }
             ConfigEntry e;
             if (!byKey.TryGetValue(key, out e)) throw new ArgumentException("clave no registrada: " + key);
             return e.Default;

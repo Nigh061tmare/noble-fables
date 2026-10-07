@@ -60,3 +60,17 @@ El simulador mide ademas que la tasa de cambios de signo semanales del sentimien
 
 La API de tiempo/calendario de Noble Fates **no esta en el informe** (firma pendiente). Hasta leerla, un «dia» del modelo son
 `dia_segundos` s de reloj (120 por defecto). La sonda F11 lista los tipos `Season/Calendar/GameTime/TimeManager` para cerrarlo.
+
+## Costes medidos (en la nube, .NET 8 Release; en Mono/Unity sera mas lento, orden x3-5: NO VERIFICADO en el juego)
+
+Modelo con ~20 eventos por pawn, pares activos entre 800 (n=50) y 7.800 (n=400):
+
+| pawns | `Avanza` (cada >=1/4 de dia) | Facciones | Metricas | Grafo |
+|---|---|---|---|---|
+| 50 | 1 ms | 10 ms | 1 ms | 4 ms |
+| 200 | <1 ms | 11 ms | 9 ms | 6 ms |
+| 400 | 5 ms | 49 ms | 43 ms | 33 ms |
+
+El informe (facciones + metricas + grafo, cada `informe_min` minutos o con F10) corre en el hilo principal: con 200 pawns son ~25 ms
+medidos aqui, es decir, **un tiron de un frame cada 5 minutos** en el juego, sin medir. Si lo notas, sube `informe_min`.
+Los pares que vuelven a su baseline se olvidan (`Avanza`), asi el modelo solo paga por relaciones activas.

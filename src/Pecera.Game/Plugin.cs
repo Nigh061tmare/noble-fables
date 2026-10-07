@@ -90,7 +90,9 @@ namespace PeceraNF
             if (_t1 >= 1f)
             {
                 _diaPendiente += _t1 / (float)Math.Max(10, Estado.Cfg.Num("dia_segundos"));
-                if (Estado.Cfg.Bool("afectos") && _diaPendiente >= 0.05f) { Estado.Afectos.Avanza(_diaPendiente); _diaPendiente = 0f; }
+                // El decaimiento compone exactamente (test), asi que se avanza a trozos de >= 1/4 de dia:
+                // el coste O(pares) no se paga cada segundo.
+                if (Estado.Cfg.Bool("afectos") && _diaPendiente >= 0.25f) { Estado.Afectos.Avanza(_diaPendiente); _diaPendiente = 0f; }
                 _t1 = 0f;
                 SondeaIds();
             }

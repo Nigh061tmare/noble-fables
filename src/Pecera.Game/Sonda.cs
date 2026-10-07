@@ -20,7 +20,7 @@ namespace PeceraNF
                 var sb = new StringBuilder("{\"pawn\":[");
                 Miembros(sb, p, p.GetType());
                 sb.Append("],\"character\":[");
-                var pr = typeof(Pawn).GetProperty("character", Aux.TODO);
+                var pr = typeof(Pawn).GetProperty("character", Aux.Todos);
                 object ch = pr != null ? pr.GetValue(p, null) : null;
                 if (ch != null) Miembros(sb, ch, ch.GetType());
                 sb.Append("],\"miembro_id_usado\":\"").Append(Json.Escape(Identidad.MiembroUsado)).Append("\"}");
@@ -37,7 +37,7 @@ namespace PeceraNF
             int n = 0;
             for (; t != null && t != typeof(object) && n < 400; t = t.BaseType)
             {
-                foreach (var m in t.GetMembers(Aux.TODO | BindingFlags.DeclaredOnly))
+                foreach (var m in t.GetMembers(Aux.Todos | BindingFlags.DeclaredOnly))
                 {
                     var f = m as FieldInfo; var pr = m as PropertyInfo;
                     if (f == null && pr == null) continue;
@@ -83,7 +83,7 @@ namespace PeceraNF
                         primero = false;
                         sb.Append("{\"tipo\":\"").Append(Json.Escape(t.FullName)).Append("\",\"miembros\":[");
                         bool pm = true;
-                        foreach (var m in t.GetMembers(Aux.TODO | BindingFlags.DeclaredOnly))
+                        foreach (var m in t.GetMembers(Aux.Todos | BindingFlags.DeclaredOnly))
                         {
                             string desc = Describe(m);
                             if (desc == null) continue;

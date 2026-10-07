@@ -4,7 +4,7 @@ Mod de **Noble Fates** (Unity Mono 2019.4, BepInEx 5.4.23.5 + Harmony) que da vo
 personajes con un LLM local (Ollama). Meta: una simulacion social **autonoma**: los habitantes viven, se relacionan, se
 entreran de secretos, forman bandos y el reino crece solo, con el jugador como mano opcional.
 
-> **Estado honesto (v0.2.0).** Toda la *logica* esta hecha y probada aqui (125 tests + simulador). **Nada de lo nuevo se ha
+> **Estado honesto (v0.2.0).** Toda la *logica* esta hecha y probada aqui (mas de 120 tests + simulador). **Nada de lo nuevo se ha
 > visto funcionar dentro del juego.** El hook y las frases de v0.1 estaban verificados en partida; bocadillos, empujon de
 > opinion, memoria persistente, modelo afectivo, rumores y consola son **NO VERIFICADOS**. Los adaptadores de esquemas,
 > peticiones, investigacion, planos y misiones estan **pendientes de confirmar firmas** y no hacen nada todavia.
@@ -48,7 +48,7 @@ antiguo dejando copia). **Todo lo que escribe en el estado del juego viene apaga
 ```
 src/Pecera.Core    C# 5 puro, sin Unity ni tipos del juego. TODA la logica. Se prueba aqui.
 src/Pecera.Game    Adaptadores finos BepInEx/Harmony (solo se compilan en tu PC con compilar.ps1).
-tests/             125 tests xUnit (JSON, config, memoria, afectos, rumores, sociedad, gobierno, simulador...)
+tests/             mas de 120 tests xUnit (JSON, config, memoria, afectos, rumores, sociedad, gobierno, simulador...)
 sim/Pecera.Sim     Simulador headless: dias de juego con mundo falso y LLM simulado determinista.
 stubs/             Comprueba en CI que Game compila (C# 5, net48, avisos=errores) contra tipos de mentira.
 legacy/            Intentos anteriores (Kenshi, Going Medieval, Lords & Villeins, pecera web) y plugin v0.1.
@@ -58,7 +58,7 @@ herramientas/      Scripts Mono.Cecil para LEER la API del juego, monitores y pe
 ## Desarrollo
 
 ```bash
-dotnet test tests/Pecera.Tests                     # 125 tests, incluye simulador y docs al dia
+dotnet test tests/Pecera.Tests                     # mas de 120 tests, incluye simulador y docs al dia
 dotnet build stubs/Pecera.Game.Check               # tipos de los adaptadores contra stubs
 dotnet run --project sim/Pecera.Sim -- --dias 360 --seed 1 --out sim_out
 ```

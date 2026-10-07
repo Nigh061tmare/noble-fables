@@ -43,7 +43,7 @@ namespace PeceraNF
 
         static object EnCharacter(Pawn p)
         {
-            var pr = typeof(Pawn).GetProperty("character", Aux.TODO);
+            var pr = typeof(Pawn).GetProperty("character", Aux.Todos);
             return pr != null ? pr.GetValue(p, null) : null;
         }
 
@@ -68,9 +68,9 @@ namespace PeceraNF
         {
             for (; t != null; t = t.BaseType)
             {
-                var f = t.GetField(n, Aux.TODO | BindingFlags.DeclaredOnly);
+                var f = t.GetField(n, Aux.Todos | BindingFlags.DeclaredOnly);
                 if (f != null && !f.IsStatic) return f;
-                var pr = t.GetProperty(n, Aux.TODO | BindingFlags.DeclaredOnly);
+                var pr = t.GetProperty(n, Aux.Todos | BindingFlags.DeclaredOnly);
                 if (pr != null && pr.GetIndexParameters().Length == 0 && pr.CanRead) return pr;
             }
             return null;
