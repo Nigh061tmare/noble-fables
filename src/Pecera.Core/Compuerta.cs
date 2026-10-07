@@ -27,6 +27,7 @@ namespace Pecera.Core
         readonly List<Decision> cola = new List<Decision>();
         readonly Dictionary<string, long> ultimaClave = new Dictionary<string, long>();
         readonly Dictionary<string, int> topeDia = new Dictionary<string, int>();
+        readonly Dictionary<string, int> enfriarClase = new Dictionary<string, int>();
         readonly Dictionary<string, Queue<long>> usos = new Dictionary<string, Queue<long>>();
         int sig = 1;
 
@@ -38,6 +39,9 @@ namespace Pecera.Core
 
         public void FijaTopeDia(string clase, int tope) { lock (cerrojo) { topeDia[clase] = tope; } }
 
+        // Enfriamiento propio de una clase (segundos). Sin el, vale EnfriarClaveSegundos.
+        public void FijaEnfriamiento(string clase, int segundos) { lock (cerrojo) { enfriarClase[clase] = segundos; } }
+
         // null = rechazada (tope o enfriamiento). Si modo es "dios" no hay ventana de veto.
         public Decision Propone(string clase, string clave, string descripcion, string razon, object carga, bool sinVeto)
         {
@@ -46,7 +50,9 @@ namespace Pecera.Core
                 long ahora = reloj.NowTicks;
                 string k = clase + "|" + clave;
                 long prev;
-                if (ultimaClave.TryGetValue(k, out prev) && ahora - prev < TimeSpan.TicksPerSecond * EnfriarClaveSegundos) return null;
+                int enf;
+                if (!enfriarClase.TryGetValue(clase, out enf)) enf = EnfriarClaveSegundos;
+                if (ultimaClave.TryGetValue(k, out prev) && ahora - prev < TimeSpan.TicksPerSecond * enf) return null;
                 int tope;
                 if (topeDia.TryGetValue(clase, out tope))
                 {

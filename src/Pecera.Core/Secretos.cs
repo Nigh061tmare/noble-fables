@@ -64,6 +64,8 @@ namespace Pecera.Core
         readonly Dictionary<string, int> aristas = new Dictionary<string, int>();
 
         public double ProbBase = 0.35;
+        public double ConfianzaConfidencia = 0.55;   // confianza minima para confiar el propio secreto
+        public double ProbConfidencia = 0.05;        // por conversacion elegible
         public int MaxFugasPorLlamada = 1;
 
         public RedSecretos(ModeloAfectivo afectos, Func<string, Ficha> fichas, IClock reloj, Rng rng)
@@ -124,6 +126,21 @@ namespace Pecera.Core
         void Cuenta(string emisor, string receptor, List<Fuga> res)
         {
             if (res.Count >= MaxFugasPorLlamada) return;
+            // Confidencia: con mucha confianza y afecto, el emisor confia SU propio secreto
+            // al receptor. Es la semilla de toda cadena de chismes; sin ella nada se filtraria.
+            Secreto propio;
+            if (porSujeto.ContainsKey(emisor) && (propio = secretos[porSujeto[emisor]]) != null && !propio.Saben.ContainsKey(receptor))
+            {
+                Par er = afectos.Get(emisor, receptor);
+                if (er.Confianza >= ConfianzaConfidencia && er.Afecto >= 0.3 && rng.Chance(ProbConfidencia))
+                {
+                    propio.Saben[receptor] = new Conocimiento { Version = propio.Texto, Fidelidad = 1, Fuente = emisor, Saltos = 1, Cuando = reloj.NowTicks };
+                    afectos.Evento(receptor, emisor, TipoEvento.Aprecio, 0.2);     // que te confien algo une
+                    var cf = new Fuga { SecretoId = propio.Id, Emisor = emisor, Receptor = receptor, Sujeto = emisor, Texto = propio.Texto, Fidelidad = 1, Saltos = 1, SujetoSeEntera = true, Motivo = "confesion" };
+                    fugas.Add(cf); res.Add(cf);
+                    return;
+                }
+            }
             // Candidatos: secretos que el emisor conoce, de un sujeto que no es ni el emisor
             // (nadie se delata a si mismo aqui) ni el receptor, y que el receptor aun no conoce.
             var cand = new List<Secreto>();

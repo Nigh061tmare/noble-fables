@@ -11,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Pecera.Core/Pecera.Core.csproj" />
+    <ProjectReference Include="../../sim/Pecera.Sim/Pecera.Sim.csproj" />
   </ItemGroup>
 </Project>
