@@ -139,6 +139,14 @@ namespace PeceraNF
                 var fs = Sociedad.Facciones(Estado.Afectos, ids, 0.15, 2);
                 Sociedad.AsignaLideres(Estado.Afectos, fs, id => Estado.Fichas.Get(id), id => Estado.Ids.Nombre(id));
                 m.Facciones = fs.Count;
+                Estado.FaccionDe.Clear();
+                var rd = new Rng(Environment.TickCount);
+                foreach (var f in fs)
+                {
+                    foreach (var mi in f.Miembros) Estado.FaccionDe[mi] = f.Nombre;
+                    Dialecto d; if (!Estado.Dialectos.TryGetValue(f.Nombre, out d)) { d = new Dialecto(); Estado.Dialectos[f.Nombre] = d; }
+                    d.Deriva(rd);
+                }
                 int dia = Gancho.DiaActual();
                 foreach (var f in fs)
                     if (f.Miembros.Count >= 3) Estado.Cronica.Anota(dia, "faccion", f.Nombre + " reune a " + f.Miembros.Count + " personas", 4);
@@ -148,7 +156,9 @@ namespace PeceraNF
                 var avisos = new List<string>(Estado.Avisos);
                 if (Estado.Salud.Degradado) avisos.Add("LLM en modo degradado (Ollama no responde)");
                 if (!Estado.EscrituraSegura) avisos.Add("escrituras bloqueadas: version del juego sin confirmar");
-                foreach (var f in fs) avisos.Add(f.Nombre + ": " + f.Miembros.Count + " miembros, cohesion " + Json.Num(f.Cohesion));
+                foreach (var f in fs) avisos.Add(f.Nombre + ": " + f.Miembros.Count + " miembros, cohesion " + Json.Num(f.Cohesion) + (Estado.Dialectos[f.Nombre].Count > 0 ? " (" + Estado.Dialectos[f.Nombre].Pista() + ")" : ""));
+                foreach (var h in Estado.Cronica.Hitos) Estado.Cultura.Observa(h);
+                avisos.Add("Credo emergente: " + Estado.Cultura.Credo());
                 string ev = Estado.Ev.ToJson(Estado.VERSION, Extra());
                 Estado.Disco.Rewrite("verificacion.json", new[] { ev });
                 Estado.Disco.Rewrite("informe.md", new[] { Informe.Markdown("Informe de Pecera (" + motivo + ")", resumen, fps, ev, m, avisos) });

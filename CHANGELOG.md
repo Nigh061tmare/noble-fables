@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (2026-10-07) — capas, pruebas y simulador
+## 0.2.0 (2026-10-07) — capas, pruebas, simulador e ideas
 
 Todo lo siguiente esta **probado en la nube (tests + simulador)** y es **NO VERIFICADO en partida** salvo lo indicado.
 
@@ -25,6 +25,12 @@ Todo lo siguiente esta **probado en la nube (tests + simulador)** y es **NO VERI
 - **L. Robustez**: disyuntor del LLM (modo degradado), guarda de version del juego, formato de datos versionado, escritura atomica.
 - **Compuerta de decisiones**: tope diario, enfriamiento y **ventana de veto** para toda escritura al juego.
 - Sondas de solo lectura (F11) para cerrar firmas pendientes.
+
+### Ideas anadidas (Core + tests + simulador; ninguna escribe en el juego)
+- **Justicia** (`Tribunal`), **sucesion y herencia** (`Linaje`, `Sucesion`), **mentoria**, **cultura/religion emergente** (`Cultura`), **dialectos**,
+  **estaciones**, **suenos e inspiraciones**, **espionaje**, **deriva de personalidad** en el simulador.
+- Cableado ligero en el juego (sin escribir): facciones, dialectos en el prompt de la voz, credo en el informe.
+- `Ficha.Ambicion` (opcional; las fichas antiguas se leen con 0.5). `compilar.ps1` pasa `-codepage:65001` (los literales con tildes del Core ya no dependen de la pagina de codigos).
 
 ### Cambiado
 - `influencia` pasa a **0 por defecto** (v0.1 la llevaba a 1 sin haberse verificado). La migracion lo apaga y lo avisa.

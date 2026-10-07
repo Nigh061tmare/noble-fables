@@ -16,6 +16,7 @@ namespace Pecera.Core
         public double Carisma = 0.5;      // 0..1, base del liderazgo
         public double Rencor = 0.5;       // 0..1, cuanto le cuesta olvidar (modula el decaimiento)
         public double Locuacidad = 0.5;   // 0..1, propension a contar secretos
+        public double Ambicion = 0.5;     // 0..1, empuja sucesiones y sueños
 
         public string Resumen()
         {
@@ -32,7 +33,7 @@ namespace Pecera.Core
             return "{\"v\":1,\"id\":\"" + Json.Escape(Id) + "\",\"nombre\":\"" + Json.Escape(Nombre) + "\","
                  + "\"rasgos\":" + Arr(Rasgos) + ",\"metas\":" + Arr(Metas) + ",\"miedos\":" + Arr(Miedos) + ","
                  + "\"voz\":\"" + Json.Escape(Voz) + "\",\"carisma\":" + Json.Num(Carisma)
-                 + ",\"rencor\":" + Json.Num(Rencor) + ",\"locuacidad\":" + Json.Num(Locuacidad) + "}";
+                 + ",\"rencor\":" + Json.Num(Rencor) + ",\"locuacidad\":" + Json.Num(Locuacidad) + ",\"ambicion\":" + Json.Num(Ambicion) + "}";
         }
 
         public static Ficha FromJson(string linea)
@@ -50,6 +51,7 @@ namespace Pecera.Core
             f.Carisma = Clamp01(Json.Num(d, "carisma", 0.5));
             f.Rencor = Clamp01(Json.Num(d, "rencor", 0.5));
             f.Locuacidad = Clamp01(Json.Num(d, "locuacidad", 0.5));
+            f.Ambicion = Clamp01(Json.Num(d, "ambicion", 0.5));   // opcional: fichas antiguas no la traen
             return f;
         }
 
@@ -101,6 +103,7 @@ namespace Pecera.Core
             f.Carisma = Math.Round(r.Range(0.1, 0.95), 2);
             f.Rencor = Math.Round(r.Range(0.1, 0.95), 2);
             f.Locuacidad = Math.Round(r.Range(0.1, 0.95), 2);
+            f.Ambicion = Math.Round(r.Range(0.1, 0.95), 2);   // al final: no altera lo sorteado antes
             return f;
         }
 

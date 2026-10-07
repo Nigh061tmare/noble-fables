@@ -31,4 +31,4 @@ dotnet run --project sim/Pecera.Sim -- --doc-config > docs/CONFIG.md   # tras to
 1. Que el usuario ejecute `VERIFICACION_PENDIENTE.md` y devuelva `verificacion.json`, `sonda.json`, `sonda_pawn.json`, `esquemas.sugeridos.txt`.
 2. Con la sonda: adaptadores reales de esquemas (`Acciones.DisparaEsquema`), peticiones, investigacion, planos, misiones, API de tiempo.
 3. Tests de integracion del pipeline del hook (hoy la logica esta en Core; el cableado en `Gancho.cs` solo se compila contra stubs).
-4. Ideas sin implementar: ver `docs/IDEAS.md`.
+4. Ideas: todas implementadas en Core salvo la voz con modelo mayor (medir antes). Faltan sus adaptadores al juego (familia, habilidades, calendario). Ver `docs/IDEAS.md`.

@@ -31,6 +31,10 @@ namespace PeceraNF
         public static PoliticaInfluencia Influencia;
         public static Cronica Cronica;
         public static Costumbres Costumbres;
+        public static Cultura Cultura;
+        // Solo hilo principal: se rellenan al escribir el informe y se leen en el hook.
+        public static readonly Dictionary<string, string> FaccionDe = new Dictionary<string, string>();
+        public static readonly Dictionary<string, Dialecto> Dialectos = new Dictionary<string, Dialecto>();
         public static CatalogoEsquemas Catalogo = new CatalogoEsquemas();
         public static Directrices Dir = new Directrices();
         public static volatile bool Activo = true;
@@ -96,6 +100,7 @@ namespace PeceraNF
             };
             Cronica = new Cronica();
             Costumbres = new Costumbres();
+            Cultura = new Cultura();
 
             string esq = Path.Combine(Datos, "esquemas.txt");
             if (File.Exists(esq)) Catalogo = CatalogoEsquemas.Parse(File.ReadAllText(esq, new UTF8Encoding(false)));

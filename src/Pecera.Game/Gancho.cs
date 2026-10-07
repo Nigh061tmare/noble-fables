@@ -85,6 +85,7 @@ namespace PeceraNF
             string ida = Identidad.Id(pawn, a);
             string idb = otro != null ? Identidad.Id(otro, b) : "x:" + b;
             bool rasgo = Habla.EsRasgo(porQue);
+            if (!rasgo && delta > 0) Estado.Cultura.Suceso("comunidad", 0.1);      // trato bueno por un hecho
 
             // Modelo afectivo, memoria y rumores (solo memoria interna: no escriben en el juego).
             if (Estado.Cfg.Bool("afectos"))
@@ -106,7 +107,8 @@ namespace PeceraNF
             }
 
             string ficha = Estado.Fichas.GetOCrea(ida, a).Resumen();
-            string faccion = null;
+            string faccion; Estado.FaccionDe.TryGetValue(ida, out faccion);
+            Dialecto dia; if (faccion != null && Estado.Dialectos.TryGetValue(faccion, out dia) && dia.Count > 0) ficha += "; " + dia.Pista();
             Estado.CargaDirectriz();
             string dir = Estado.Dir.Para(a, faccion);
             Encola(delegate
@@ -156,6 +158,7 @@ namespace PeceraNF
             else Estado.Ev.Fail("voz_frase", error.Length > 0 ? error : "sin frase util (metodo=" + r.Metodo + ")");
 
             double ajuste = 0;
+            if (r.Ok) Principal.Encola(delegate { Estado.Cultura.Suceso(r.Actitud == "perdona" ? "clemencia" : r.Actitud == "empeora" ? "venganza" : "honor", 0.1); });
             if (r.Ok) ajuste = Aplica(pawn, of, reason, ida, idb, delta, r.Actitud);
             Registra(a, b, porQue, delta, valor, r.Ok ? r.Texto : null, r.Piensa, true, r.Actitud, ajuste);
             if (r.Ok) Pantalla.Burbuja(pawn, a, r.Texto, delta > 0);

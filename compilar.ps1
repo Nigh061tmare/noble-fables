@@ -72,7 +72,7 @@ $OUT = Join-Path $Salida "PeceraNF.dll"
 # Se borra el DLL previo: si la compilacion falla no debe quedar un binario viejo haciendose pasar por bueno.
 Remove-Item $OUT -Force -ErrorAction SilentlyContinue
 
-$arg = @("-target:library", "-out:$OUT", "-optimize+", "-nologo", "-warnaserror+")
+$arg = @("-target:library", "-out:$OUT", "-optimize+", "-nologo", "-warnaserror+", "-codepage:65001")
 foreach ($r in $refs) { $arg += "-r:`"$r`"" }
 # Las rutas de fuentes van SIN comillas anadidas (PowerShell ya cita lo que lleva espacios), como en la v0.1.
 foreach ($f in $fuentes) { $arg += $f.FullName }

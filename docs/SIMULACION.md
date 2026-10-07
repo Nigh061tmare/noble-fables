@@ -22,23 +22,37 @@ valores absolutos del juego.
 
 ## Barrido de umbrales (evidencia para el defecto)
 
-360 dias × 5 semillas por fila, 20 personajes; `umbral` = `Consejo.UmbralAprobacion`.
+360 dias × 5 semillas por fila, 20 personajes, **con todas las ideas activas**; `umbral` = `Consejo.UmbralAprobacion`.
 
 | umbral | aprobadas | denegadas | investigaciones | rencor max | oscilacion % | saber final | estabilidad |
 |---|---|---|---|---|---|---|---|
-| 0.35 | 88 | 38 | 21.4 | 0.921 | 4.53 | 0.713 | 0.779 |
-| 0.40 | 73 | 54 | 20.8 | 0.938 | 4.40 | 0.694 | 0.778 |
-| **0.45** | 52 | 72 | 20.4 | 0.942 | 4.32 | 0.646 | 0.770 |
-| 0.50 | 34 | 90 | 20.2 | 0.906 | 4.00 | 0.605 | 0.770 |
-| 0.55 | 16 | 106 | 19.8 | 0.911 | 3.74 | 0.528 | 0.778 |
+| 0.35 | 85 | 40 | 21.8 | 0.930 | 5.51 | 0.724 | 0.764 |
+| 0.40 | 66 | 50 | 21.4 | 0.940 | 5.15 | 0.694 | 0.778 |
+| **0.45** | 50 | 71 | 20.6 | 0.948 | 5.10 | 0.633 | 0.762 |
+| 0.50 | 33 | 85 | 20.6 | 0.946 | 4.92 | 0.613 | 0.758 |
+| 0.55 | 16 | 103 | 20.4 | 0.939 | 4.91 | 0.578 | 0.768 |
 
-Lectura honesta: el umbral **casi no cambia la estabilidad ni la oscilacion**; solo cambia cuantas peticiones se aprueban y, con ello,
-el saber. Se deja 0.45 (≈ 42 % de aprobacion: ni complaciente ni cerrado) como defecto **razonable, no optimo**: el simulador no tiene
-informacion para decir que otro valor sea mejor. Reproducir: `-- --barrido --dias 360 --pawns 20`.
+Max dias seguidos sin progreso: 7 en todas las filas. Lectura honesta: el umbral **casi no cambia la estabilidad ni la oscilacion**; solo cambia cuantas
+peticiones se aprueban y, con ello, el saber. Se deja 0.45 (≈ 41 % de aprobacion) como defecto **razonable, no optimo**: el simulador no tiene informacion para
+decir que otro valor sea mejor. Reproducir: `-- --barrido --dias 360 --pawns 20`.
 
-Otro hallazgo del simulador (arreglado): sin una *semilla* de secretos nadie los contaba; se anadio la **confidencia** (con mucha
-confianza y afecto el propio sujeto lo confia). Defectos elegidos con el simulador: `ConfianzaConfidencia 0.55`, `ProbConfidencia 0.05`
-(con 0.62/0.02 casi ningun secreto salia a la luz en un anio).
+## Las ideas dentro del simulador (3 semillas, 360 dias, 24 personajes)
 
-Las tradiciones no llegan a emerger en 360 dias porque hacen falta 3 anios distintos en la misma temporada (`Costumbres`, con test unitario);
-con `--dias 1080` pueden verse.
+| Idea | Resultado observado | Lectura |
+|---|---|---|
+| Sucesion | El soberano muere a mitad del periodo; sucede un hijo/pariente; herencia 30/30 repartida; disputa si el margen es < 0.03 | La conservacion de bienes esta ademas probada con tests de propiedades |
+| Justicia | 26–41 juicios propuestos, 17–23 condenas y 3–11 absoluciones ejecutadas (tope 1/dia + veto) | Solo penas seguras; los jueces con rencor condenan mas (test) |
+| Mentoria | 10–19 lazos; habilidad media 0.41–0.57 → ~0.80–0.82 | Converge sin alcanzar al maestro |
+| Espionaje | 11–13 exitos, 4–8 descubiertos por anio | El descubrimiento se vuelve traicion |
+| Rumores | 15–23 de 24 secretos llegan a mas de 1 persona, alcance medio 8–11, fidelidad media 0.82–0.87, hasta 8 saltos | **Mas que sin ideas** (la mentoria sube la confianza, y la confianza abre confidencias) |
+| Suenos | 7–15 inspiraciones, **0 sueños cumplidos en un anio** | Con estos ritmos los suenos son de largo plazo; no se ha forzado para que salgan bonitos |
+| Cultura | Credo «Rito de la Deuda» en las 3 semillas | **Artefacto del simulador**: sus esquemas hostiles (170/anio) dominan el contador de `venganza`. En el juego dependera de lo que pase de verdad |
+| Dialectos | 30–37 giros en total (≤ 5 por faccion) | Acotado |
+| Deriva | maxima 0.025–0.049 (tope 0.2) | Casi imperceptible en un anio |
+| Estaciones | modifican sociabilidad e irritabilidad ±10–25 % | Efecto suave, no cambia la estabilidad |
+
+Defectos elegidos con el simulador (y por que): `ProbBase` de chismorreo = **0.08** (con 0.35/0.15 casi todos los secretos eran de dominio publico en un anio),
+`ConfianzaConfidencia 0.55`, `ProbConfidencia 0.05` (con 0.62/0.02 casi ningun secreto salia a la luz sin mentoria).
+Los supuestos del simulador (porcentaje de interacciones positivas 62 %, etc.) estan en `Mundo.cs`.
+
+Las tradiciones no llegan a emerger en 360 dias porque hacen falta 3 anios distintos en la misma temporada (`Costumbres`, con test unitario).

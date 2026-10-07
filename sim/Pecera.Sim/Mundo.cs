@@ -11,6 +11,7 @@ namespace Pecera.Sim
     {
         public int Dias = 360, Pawns = 24, Seed = 1;
         public bool Gobierno = true, Esquemas = true, Rumores = true, Afectos = true;
+        public bool Ideas = true;               // justicia, sucesion, mentoria, cultura, dialectos, estaciones, suenos, espionaje, deriva
         public double UmbralAprobacion = 0.45;
         public double ProbVeto = 0.10;          // el jugador veta el 10 % de lo que ve
         public double ProbLlmCae = 0.10;        // 10 % de las llamadas al LLM simulado fallan
@@ -39,6 +40,10 @@ namespace Pecera.Sim
         public int TradicionesEmergidas;
         public double AlcanceMedio, FidelidadMedia; public int SaltosMax, SecretosExpuestos;
         public string TopChismosos = "";
+        public int Juicios, Condenas, Absoluciones, EspiasExito, EspiasDescubiertos, InspiracionesTotal, SuenosCumplidos, LazosMentoria, GirosDialecto;
+        public bool HuboSucesion, SucesionDisputada; public string Sucesor = "", Credo = "";
+        public double HabilidadMediaInicial, HabilidadMediaFinal, DerivaMax;
+        public int HerenciaRepartida;
         public int FaccionesFinales;
         public double TasaCambioSigno { get { return ParesObservados == 0 ? 0 : (double)CambiosDeSigno / ParesObservados; } }
         public MetricasReino Final { get { return Semanas.Count > 0 ? Semanas[Semanas.Count - 1].M : new MetricasReino(); } }
@@ -80,6 +85,17 @@ namespace Pecera.Sim
         readonly List<OpcionElegible> arbol = new List<OpcionElegible>();
         readonly HashSet<string> hechas = new HashSet<string>();
         string soberano;
+        readonly Tribunal tribunal;
+        readonly Linaje linaje = new Linaje();
+        readonly Mentoria mentoria = new Mentoria();
+        readonly Cultura cultura = new Cultura();
+        readonly Suenos suenos = new Suenos();
+        readonly Dictionary<string, Dialecto> dialectos = new Dictionary<string, Dialecto>();
+        readonly Dictionary<string, double> habilidad = new Dictionary<string, double>();
+        readonly Dictionary<string, double> rencorBase = new Dictionary<string, double>();
+        readonly HashSet<string> muertos = new HashSet<string>();
+        int fugasJuzgadas;
+        bool sucesionHecha;
         int diasSinProgreso;
         int dia;
 
@@ -105,13 +121,27 @@ namespace Pecera.Sim
             consejo = new Consejo(afectos) { UmbralAprobacion = cfg.UmbralAprobacion };
             salud = new SaludLlm(reloj);
             poblacion = 0.4;
+            tribunal = new Tribunal(afectos);
+            compuerta.FijaTopeDia("juicio", 1);
+            compuerta.FijaEnfriamiento("juicio", 3600);
+            if (cfg.Ideas) IniciaIdeas();
             // El soberano es quien tiene mas carisma.
-            soberano = ids.OrderByDescending(i => fichas.Get(i).Carisma).ThenBy(i => i, StringComparer.Ordinal).First();
+            soberano = ids.Take(cfg.Ideas ? Math.Min(6, ids.Count) : ids.Count).OrderByDescending(i => fichas.Get(i).Carisma).ThenBy(i => i, StringComparer.Ordinal).First();   // con Ideas, de entre los mayores (tienen familia)
             string[] cat = { "crecimiento", "defensa", "cultura", "economia", "cohesion" };
             for (int i = 0; i < 40; i++)
                 arbol.Add(new OpcionElegible { Id = "inv" + i.ToString("00"), Nombre = "Saber " + i, Categoria = cat[i % 5], Coste = 12 + (i / 5) * 6 });
             cronica.DiasPorTemporada = 90;
             if (cfg.Rumores) foreach (var id in ids) secretos.Asigna(id, RedSecretos.SecretoDeReserva(id), 0.3 + 0.6 * ((FichaGen.Hash(id + "g") % 100) / 100.0));
+        }
+
+        void IniciaIdeas()
+        {
+            // 6 mayores forman 3 matrimonios; el resto son sus hijos. Nadie tiene mas de un hogar.
+            for (int i = 0; i < ids.Count; i++) linaje.Nace(ids[i], i < 6 ? -8000 - i : -1000 - i * 10, i < 6 ? null : ids[(i % 6) & ~1], i < 6 ? null : ids[((i % 6) & ~1) + 1]);
+            for (int i = 0; i + 1 < 6 && i + 1 < ids.Count; i += 2) linaje.Casa(ids[i], ids[i + 1]);
+            var rh = new Rng(cfg.Seed * 31 + 7);
+            foreach (var id in ids) { habilidad[id] = rh.Range(0.1, 0.9); rencorBase[id] = fichas.Get(id).Rencor; }
+            double t = 0; foreach (var v in habilidad.Values) t += v; res.HabilidadMediaInicial = t / habilidad.Count;
         }
 
         string LlmSimulado(string tipo, string entrada)
@@ -127,6 +157,7 @@ namespace Pecera.Sim
             for (dia = 0; dia < cfg.Dias; dia++)
             {
                 reloj.Ticks += compuerta.DiaTicks;
+                if (cfg.Ideas) IdeasDiarias();
                 VidaSocial();
                 if (cfg.Afectos) afectos.Avanza(1);
                 if (cfg.Gobierno) GobiernoDia();
@@ -134,6 +165,7 @@ namespace Pecera.Sim
                 if (cfg.Esquemas && dia % 3 == 0) Intenciones();
                 EjecutaDecisiones();
                 Mantenimiento();
+                if (cfg.Ideas && dia % 30 == 29) IdeasMensuales();
                 if (dia % 7 == 6) Semanal();
             }
             Cierra();
@@ -143,18 +175,20 @@ namespace Pecera.Sim
         // --- vida social ---
         void VidaSocial()
         {
+            ModEstacion est = cfg.Ideas ? Estaciones.De(dia, cronica.DiasPorTemporada) : new ModEstacion { Nombre = "neutra" };
             foreach (var a in ids)
             {
-                if (!rng.Chance(0.5)) continue;
+                if (!rng.Chance(0.5 * Math.Min(1, est.Sociabilidad))) continue;
                 string b = ids[rng.Next(ids.Count)];
                 if (a == b) continue;
                 double s = afectos.Sentimiento(a, b);
-                double pBien = Math.Max(0.1, Math.Min(0.9, 0.5 + 0.4 * s));
+                double pBien = Math.Max(0.1, Math.Min(0.9, (0.62 + 0.4 * s) * est.Sociabilidad / est.Irritabilidad));
                 if (cfg.Afectos)
                 {
                     if (rng.Chance(pBien))
                     {
                         double r = rng.Next();
+                        if (r > 0.9 && cfg.Ideas) cultura.Suceso("comunidad", 0.1);
                         if (r < 0.55) afectos.Evento(a, b, TipoEvento.Aprecio, rng.Range(0.1, 0.5));
                         else if (r < 0.75) afectos.Evento(a, b, TipoEvento.Ayuda, rng.Range(0.1, 0.6));
                         else if (r < 0.85 && s > 0.15) afectos.Evento(a, b, TipoEvento.Cortejo, rng.Range(0.1, 0.5));
@@ -172,7 +206,10 @@ namespace Pecera.Sim
                     if (rng.Chance(0.0003)) afectos.Evento(a, b, TipoEvento.Duelo, 1);
                     // El perdon espontaneo existe, y mas en quien tiene afecto previo.
                     if (afectos.Get(a, b).Rencor > 0.3 && rng.Chance(0.02 + 0.05 * Math.Max(0, afectos.Get(a, b).Afecto)))
+                    {
                         afectos.Evento(a, b, TipoEvento.Perdon, rng.Range(0.3, 0.9));
+                        if (cfg.Ideas) cultura.Suceso("clemencia", 1);
+                    }
                 }
                 if (cfg.Rumores) res.Fugas += secretos.Conversan(a, b).Count;
             }
@@ -230,12 +267,12 @@ namespace Pecera.Sim
                 {
                     foreach (var o in disp) o.Disponible = true;
                     var d = compuerta.Propone("investigacion", "inv", "investigar", "metas", consejo.Elige(disp, metas), false);
-                    if (d != null) investigacionPendiente = d;
+
                 }
             }
         }
 
-        Decision investigacionPendiente;
+
 
         void EjecutaDecisiones()
         {
@@ -246,6 +283,7 @@ namespace Pecera.Sim
                 if (d.Clase == "peticion") Aplica((Peticion)d.Carga);
                 else if (d.Clase == "investigacion") { if (enCurso == null) enCurso = (OpcionElegible)d.Carga; }
                 else if (d.Clase == "esquema") EjecutaEsquema((PropuestaEsquema)d.Carga);
+                else if (d.Clase == "juicio") EjecutaJuicio((Sentencia)d.Carga);
             }
             reloj.Ticks -= 31 * TimeSpan.TicksPerSecond;
         }
@@ -263,8 +301,105 @@ namespace Pecera.Sim
                 for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) if (i != j && cfg.Afectos) afectos.Evento(ids[(dia + i) % ids.Count], ids[(dia + j) % ids.Count], TipoEvento.Fiesta, 0.5);
                 if (costumbres.Observa("fiesta", dia / 360, (dia / 90) % 4)) { res.TradicionesEmergidas++; cronica.Anota(dia, "tradicion", "Nace la tradicion de la fiesta de " + (new[] { "primavera", "verano", "otono", "invierno" })[(dia / 90) % 4], 8); }
             }
+            if (cfg.Ideas) Inspira(p.Solicitante, p.Categoria, 0.25 * p.Importancia + 0.05);
             if (cfg.Afectos) afectos.Evento(p.Solicitante, soberano, TipoEvento.Aprecio, 0.3);
             cronica.Anota(dia, "peticion", nombres[p.Solicitante] + " obtiene " + p.Tipo, 1 + p.Importancia);
+        }
+
+        // --- ideas: justicia, sucesion, mentoria, cultura, dialectos, suenos, espionaje, deriva ---
+        void Inspira(string id, string categoria, double cantidad)
+        {
+            Ficha f = fichas.Get(id);
+            if (f == null || muertos.Contains(id)) return;
+            foreach (var t in suenos.Avanza(f, categoria, cantidad, afectos))
+            {
+                res.InspiracionesTotal++;
+                if (t.Contains("cumple")) cronica.Anota(dia, "sueno", t, 3);
+            }
+        }
+
+        void IdeasDiarias()
+        {
+            // Sucesion: el soberano muere a mitad del periodo simulado (un solo caso, para ejercitarla).
+            if (!sucesionHecha && dia >= cfg.Dias / 2)
+            {
+                sucesionHecha = true;
+                string viejo = soberano;
+                linaje.Muere(viejo); muertos.Add(viejo); ids.Remove(viejo);
+                var r = Sucesion.Elige(viejo, linaje, ids, afectos, id => fichas.Get(id), 0.03);
+                if (r.Sucesor.Length > 0) soberano = r.Sucesor;
+                res.HuboSucesion = true; res.SucesionDisputada = r.Disputada; res.Sucesor = r.Sucesor;
+                var reparto = Linaje.Reparte(30, linaje.HijosVivos(viejo), linaje.Conyuge(viejo));
+                int tot = 0; foreach (var v in reparto.Values) tot += v; res.HerenciaRepartida = tot;
+                cronica.Anota(dia, "sucesion", nombres[viejo] + " muere; le sucede " + (r.Sucesor.Length > 0 ? nombres[r.Sucesor] : "nadie") + (r.Disputada ? " tras una disputa" : ""), 9);
+            }
+            // Juicios: las fugas graves nuevas pueden acabar ante el soberano.
+            while (fugasJuzgadas < secretos.Fugas.Count)
+            {
+                Fuga f = secretos.Fugas[fugasJuzgadas++];
+                Secreto sec = secretos.Get(f.SecretoId);
+                Acusacion ac = Tribunal.DesdeFuga(f, sec, dia);
+                if (ac == null || muertos.Contains(ac.Acusado) || muertos.Contains(ac.Acusador) || !rng.Chance(0.4)) continue;
+                var sen = tribunal.Juzga(ac, soberano, false);
+                res.Juicios++;
+                compuerta.Propone("juicio", ac.Acusador + ">" + ac.Acusado, "juicio por " + ac.Delito, sen.Razon, sen, false);
+            }
+            // Mentoria: avanzan los lazos activos.
+            foreach (var l in mentoria.Lazos)
+            {
+                double nuevo = mentoria.Avanza(l, habilidad[l.Mentor], habilidad[l.Aprendiz], 1, afectos);
+                habilidad[l.Aprendiz] = nuevo;
+            }
+        }
+
+        void EjecutaJuicio(Sentencia sen)
+        {
+            tribunal.Aplica(sen);
+            if (sen.Pena == Pena.Absolver) res.Absoluciones++; else { res.Condenas++; cultura.Suceso("honor", 1); }
+            cronica.Anota(dia, "juicio", nombres[sen.Causa.Acusado] + " " + (sen.Pena == Pena.Absolver ? "es absuelto" : "es condenado (" + sen.Pena + ")"), sen.Pena == Pena.Absolver ? 3 : 5);
+        }
+
+        void IdeasMensuales()
+        {
+            var vivos = ids;
+            mentoria.Empareja(vivos, (id, h) => habilidad[id], new[] { "oficio" }, afectos, 0.25);
+            mentoria.Termina(vivos, (id, h) => habilidad[id]);
+            res.LazosMentoria = Math.Max(res.LazosMentoria, mentoria.Lazos.Count);
+            double t = 0; foreach (var id in vivos) t += habilidad[id]; res.HabilidadMediaFinal = t / Math.Max(1, vivos.Count);
+
+            var fs = Sociedad.Facciones(afectos, vivos, 0.15, 3);
+            Sociedad.AsignaLideres(afectos, fs, id => fichas.Get(id), id => nombres[id]);
+            var rd = new Rng(cfg.Seed * 13 + dia);
+            foreach (var f in fs)
+            {
+                Dialecto d; if (!dialectos.TryGetValue(f.Lider, out d)) { d = new Dialecto(); dialectos[f.Lider] = d; }
+                d.Deriva(rd);
+                // Espionaje: el lider espia a la persona que mas le cae mal fuera de su faccion.
+                string objetivo = null; double peor = 1;
+                foreach (var o in vivos) { if (f.Miembros.Contains(o)) continue; double sen = afectos.Sentimiento(f.Lider, o); if (sen < peor) { peor = sen; objetivo = o; } }
+                if (objetivo != null && peor < -0.05)
+                {
+                    bool desc; var fu = secretos.Espia(f.Lider, objetivo, out desc);
+                    if (fu != null) res.EspiasExito++;
+                    if (desc) res.EspiasDescubiertos++;
+                }
+            }
+            int giros = 0; foreach (var d in dialectos.Values) giros += d.Count; res.GirosDialecto = giros;
+
+            // Fe y deriva de personalidad.
+            double maxDer = res.DerivaMax;
+            foreach (var id in vivos)
+            {
+                double trauma = 0, grat = 0; int n = 0;
+                foreach (var o in vivos) { if (o == id) continue; Par p = afectos.Get(id, o); trauma = Math.Max(trauma, p.Trauma); grat += Math.Max(0, p.Deuda); n++; }
+                Ficha f = fichas.Get(id);
+                f.Rencor = Deriva.Aplica(f.Rencor, rencorBase[id], trauma, n > 0 ? Math.Min(1, grat / n * 5) : 0);
+                maxDer = Math.Max(maxDer, Math.Abs(f.Rencor - rencorBase[id]));
+                cultura.ActualizaFe(id, Math.Min(1, afectos.Get(id, soberano).Afecto + 0.5), trauma < 0.1 ? 0.5 : 0, Sociedad.Soledad(afectos, id, vivos));
+            }
+            res.DerivaMax = maxDer;
+            foreach (var h in cronica.Hitos) cultura.Observa(h);
+            res.Credo = cultura.Credo();
         }
 
         // --- esquemas ---
@@ -282,6 +417,7 @@ namespace Pecera.Sim
             res.EsquemasEjecutados++;
             if (p.Talante == Talante.Hostil)
             {
+                if (cfg.Ideas) cultura.Suceso("venganza", 0.5);
                 afectos.Evento(p.Objetivo, p.Ejecutor, TipoEvento.Agravio, 0.35);       // el objetivo se ofende
                 afectos.Evento(p.Ejecutor, p.Objetivo, TipoEvento.Perdon, 0.35);       // el ejecutor se desahoga (catarsis parcial)
                 cronica.Anota(dia, "esquema", nombres[p.Ejecutor] + " intriga contra " + nombres[p.Objetivo], 3);
@@ -318,6 +454,7 @@ namespace Pecera.Sim
                     saber = Math.Min(1, (double)hechas.Count / arbol.Count + saberExtra);
                     res.Investigadas++;
                     cronica.Anota(dia, "saber", "Se descubre " + enCurso.Nombre, 4);
+                    if (cfg.Ideas) { cultura.Suceso("saber", 1); foreach (var id in ids) Inspira(id, enCurso.Categoria, 0.04); }
                     if (enCurso.Categoria == "economia") riqueza = Math.Min(1, riqueza + 0.05);
                     if (enCurso.Categoria == "defensa") seguridad = Math.Min(1, seguridad + 0.08);
                     if (enCurso.Categoria == "crecimiento") poblacion = Math.Min(1, poblacion + 0.05);
@@ -400,6 +537,17 @@ namespace Pecera.Sim
             Fila(sb, "Fallos del LLM simulado / resumenes con fallback", res.FallosLlm + " / " + res.ResumenesFallback);
             Fila(sb, "Facciones finales", res.FaccionesFinales.ToString(CultureInfo.InvariantCulture));
             Fila(sb, "Tradiciones emergidas", res.TradicionesEmergidas.ToString(CultureInfo.InvariantCulture));
+            if (cfg.Ideas)
+            {
+                Fila(sb, "Juicios propuestos / condenas / absoluciones ejecutadas", res.Juicios + " / " + res.Condenas + " / " + res.Absoluciones);
+                Fila(sb, "Sucesion", res.HuboSucesion ? "sucede " + (res.Sucesor.Length > 0 ? nombres[res.Sucesor] : "nadie") + (res.SucesionDisputada ? " (disputada)" : "") + "; herencia repartida " + res.HerenciaRepartida + "/30" : "no hubo");
+                Fila(sb, "Mentoria: lazos maximos / habilidad media inicial -> final", res.LazosMentoria + " / " + Json.Num(res.HabilidadMediaInicial) + " -> " + Json.Num(res.HabilidadMediaFinal));
+                Fila(sb, "Espionaje: exitos / descubiertos", res.EspiasExito + " / " + res.EspiasDescubiertos);
+                Fila(sb, "Suenos: inspiraciones / cumplidos", res.InspiracionesTotal + " / " + suenos.Cumplidos + " de " + suenos.Total);
+                res.SuenosCumplidos = suenos.Cumplidos;
+                Fila(sb, "Credo emergente", res.Credo.Length > 0 ? res.Credo : "(aun sin credo)");
+                Fila(sb, "Giros de dialecto (total) / deriva maxima de temperamento", res.GirosDialecto + " / " + Json.Num(res.DerivaMax));
+            }
             sb.Append("\n## Metricas finales\n\n```\n").Append(f0.ToJson()).Append("\n```\n");
             res.Informe = sb.ToString();
         }

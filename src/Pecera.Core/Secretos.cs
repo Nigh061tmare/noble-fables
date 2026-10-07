@@ -63,7 +63,7 @@ namespace Pecera.Core
         // Aristas del grafo de chismes: emisor -> receptor : numero de fugas.
         readonly Dictionary<string, int> aristas = new Dictionary<string, int>();
 
-        public double ProbBase = 0.35;
+        public double ProbBase = 0.08;
         public double ConfianzaConfidencia = 0.55;   // confianza minima para confiar el propio secreto
         public double ProbConfidencia = 0.05;        // por conversacion elegible
         public int MaxFugasPorLlamada = 1;
@@ -175,6 +175,37 @@ namespace Pecera.Core
             var f = new Fuga { SecretoId = sec.Id, Emisor = emisor, Receptor = receptor, Sujeto = sec.Sujeto, Texto = version, Fidelidad = fid, Saltos = ck.Saltos + 1, SujetoSeEntera = seEntera, Motivo = motivo };
             fugas.Add(f); res.Add(f);
             string ak = emisor + "\u001f" + receptor; int n; aristas.TryGetValue(ak, out n); aristas[ak] = n + 1;
+        }
+
+        // Espionaje (F): 'espia' intenta enterarse del secreto de 'objetivo' por su cuenta. El exito
+        // depende del carisma del espia y de la locuacidad del objetivo; si el objetivo lo descubre
+        // lo toma como una traicion. Devuelve la fuga si hubo exito, o null.
+        public double ProbEspiar(string espia, string objetivo)
+        {
+            Ficha fe = fichas(espia), fo = fichas(objetivo);
+            double carisma = fe != null ? fe.Carisma : 0.5, loc = fo != null ? fo.Locuacidad : 0.5;
+            return Math.Max(0.02, Math.Min(0.8, 0.15 + 0.35 * carisma + 0.25 * loc));
+        }
+
+        public Fuga Espia(string espia, string objetivo, out bool descubierto)
+        {
+            descubierto = false;
+            if (espia == objetivo || !porSujeto.ContainsKey(objetivo)) return null;
+            Secreto s = secretos[porSujeto[objetivo]];
+            if (s.Saben.ContainsKey(espia)) return null;
+            if (!rng.Chance(ProbEspiar(espia, objetivo)))
+            {
+                descubierto = rng.Chance(0.3);
+                if (descubierto) afectos.Evento(objetivo, espia, TipoEvento.Traicion, 0.5);
+                return null;
+            }
+            double fid = 0.9;
+            s.Saben[espia] = new Conocimiento { Version = Distorsiona(s.Texto, fid, rng), Fidelidad = fid, Fuente = "espionaje", Saltos = 1, Cuando = reloj.NowTicks };
+            descubierto = rng.Chance(0.15);
+            if (descubierto) afectos.Evento(objetivo, espia, TipoEvento.Traicion, 0.4 + 0.4 * s.Gravedad);
+            var f = new Fuga { SecretoId = s.Id, Emisor = "espionaje", Receptor = espia, Sujeto = objetivo, Texto = s.Saben[espia].Version, Fidelidad = fid, Saltos = 1, SujetoSeEntera = descubierto, Motivo = "espionaje" };
+            fugas.Add(f);
+            return f;
         }
 
         // Distorsion determinista: a menor fidelidad, mas hedging y mas exageracion.
