@@ -1,0 +1,21 @@
+{
+  "zzz": {
+    "text": "Z",
+    "velocity": { "x": 0.2, "y": -0.5 },
+    "lifetime": 2,
+    "size": [6, 10]
+  },
+  "exclamation": {
+    "text": "!",
+    "velocity": { "x": 0, "y": -0.3 },
+    "lifetime": 1.5,
+    "size": 8,
+    "color": "#ff4444"
+  },
+  "thought": {
+    "text": "...",
+    "velocity": { "x": 0, "y": -0.2 },
+    "lifetime": 2,
+    "size": 5
+  }
+}

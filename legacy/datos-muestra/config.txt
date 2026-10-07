@@ -1,0 +1,12 @@
+# Ajustes de Pecera NobleFates. Edita y reinicia el juego.
+# modelos medidos: qwen4b-silly / qwen9b-silly / mimo-9b:q4 / mistral-nemo
+modelo=qwen4b-silly:latest
+umbral_habla=1
+umbral_rasgo=2
+gap_voz=25
+fps_log=0
+# umbral_*: |cambio| minimo para hablar (hecho / rasgo). gap_voz: s entre frases. fps_log=1 diagnostica lag.
+influencia=1
+influencia_max=0.25
+burbujas=1
+# influencia=1: la actitud de cada frase (empeora/mantiene/perdona) empuja su opinion en el juego, max influencia_max por frase. F7 burbujas, F8 panel, F9 limpiar.

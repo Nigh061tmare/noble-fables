@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Core: C# puro, sin Unity ni tipos del juego. LangVersion 5 a proposito:
+       el csc.exe de .NET Framework 4 (el unico del PC del autor) solo entiende C# 5,
+       y compilar.ps1 compila estos mismos ficheros dentro del plugin. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>5</LangVersion>
+    <RootNamespace>Pecera.Core</RootNamespace>
+    <AssemblyName>Pecera.Core</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

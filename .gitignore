@@ -28,3 +28,7 @@ __pycache__/
 Assembly-CSharp.dll
 *.pck
 *.db
+bin/
+obj/
+TestResults/
+*.zip

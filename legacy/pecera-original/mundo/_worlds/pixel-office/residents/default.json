@@ -1,0 +1,18 @@
+{
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "sheets": {
+    "base": "morty_walk.png"
+  },
+  "animations": {
+    "idle_down": { "sheet": "base", "row": 0, "frames": 2, "speed": 0.5 },
+    "idle_up": { "sheet": "base", "row": 1, "frames": 2, "speed": 0.5 },
+    "walk_down": { "sheet": "base", "row": 0, "frames": 4, "speed": 0.15 },
+    "walk_up": { "sheet": "base", "row": 1, "frames": 4, "speed": 0.15 },
+    "walk_left": { "sheet": "base", "row": 2, "frames": 4, "speed": 0.15 },
+    "walk_right": { "sheet": "base", "row": 3, "frames": 4, "speed": 0.15 },
+    "working": { "sheet": "base", "row": 0, "frames": 2, "speed": 0.3 },
+    "sleeping": { "sheet": "base", "row": 0, "frames": 2, "speed": 0.8 },
+    "talking": { "sheet": "base", "row": 0, "frames": 4, "speed": 0.12 }
+  }
+}

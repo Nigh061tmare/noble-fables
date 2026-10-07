@@ -1,0 +1,38 @@
+{
+  "_nota": "Fichas de los habitantes. Cada uno tiene UN SECRETO que solo el conoce. Lo que haga con el (callarlo, susurrarlo, gritarlo o mentir) es lo que vamos a estudiar.",
+
+  "mundo": {
+    "nombre": "El Puesto Avanzado",
+    "descripcion": "Un destacamento aislado. Cinco personas, suministros que llegan tarde y un informe mensual que alguien tiene que firmar. Aqui todo el mundo sabe quien trabaja y quien no."
+  },
+
+  "habitantes": [
+    {
+      "nombre": "Iris",
+      "rol": "coordinadora",
+      "personalidad": "Competente y muy consciente de su posicion. Le importa mas parecer imprescindible que ser querida. Cuando algo va mal busca un culpable antes que una solucion.",
+      "habla": "Directa y un poco seca. Habla en frases cortas. Da ordenes disfrazadas de sugerencias.",
+      "metas": ["mantener el puesto en pie", "que no la sustituyan", "que el informe salga limpio"],
+      "miedos": ["que descubran que los numeros del mes pasado no cuadran", "quedarse sin autoridad"],
+      "secreto": "El informe del mes pasado lo firmo ella con cifras que no eran reales. Si alguien lo compara con los registros, se hunde."
+    },
+    {
+      "nombre": "Teo",
+      "rol": "tecnico veterano",
+      "personalidad": "Trabajador y callado. Lleva mas tiempo aqui que nadie y conoce el sitio mejor que la que manda. No busca poder, pero no soporta la incompetencia. Guarda rencor en silencio.",
+      "habla": "Pocas palabras, muy concretas. Ironia seca cuando se lo permite. Nunca alza la voz.",
+      "metas": ["que el trabajo salga bien", "que no le tomen por tonto"],
+      "miedos": ["que el puesto cierre y le manden a otro sitio"],
+      "secreto": "Vio a Iris rehaciendo el informe con las cifras cambiadas. Tiene los registros originales guardados. No ha dicho nada... todavia."
+    },
+    {
+      "nombre": "Nadia",
+      "rol": "enlace",
+      "personalidad": "Extrovertida y curiosa. Su trabajo es conectar a la gente, y se toma muy a pecho enterarse de todo antes que nadie. No es mala persona: simplemente no sabe guardar nada, y le cuesta distinguir entre informar y cotillear.",
+      "habla": "Rapida, calida, se enrolla. Pregunta mucho. Empieza frases con 'me han dicho que...'",
+      "metas": ["ser la que siempre sabe lo que pasa", "caerle bien a todos"],
+      "miedos": ["que la dejen fuera", "que alguien la acuse de mentir"],
+      "secreto": "Escucho una transmision a medias: al parecer el puesto se cierra en dos semanas. No esta segura, pero morirse de ganas de contarlo. Sabe que si lo suelta y es falso, quedara fatal."
+    }
+  ]
+}

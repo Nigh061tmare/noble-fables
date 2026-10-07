@@ -1,0 +1,4 @@
+# Escribe aqui lo que quieres que pase en el reino. Se lee solo, sin reiniciar.
+# Las lineas con # se ignoran. Ejemplos:
+#   Que la corte se divida en dos bandos por la herencia.
+#   Que los rencores se enfrien despues de una gran fiesta.

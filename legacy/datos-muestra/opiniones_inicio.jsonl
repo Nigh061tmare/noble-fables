@@ -1,0 +1,150 @@
+﻿{"t":"2026-10-06T16:05:02","a":"Chico","b":"Edelin","delta":-2.442,"antes":null,"despues":null,"motivo_juego":"Edelin está Bueno | PersistentLocalizedStringContext","dice":":  Don Chico","piensa":""}
+{"t":"2026-10-06T16:05:07","a":"Nala","b":"Edelin","delta":-1.963,"antes":null,"despues":null,"motivo_juego":"Edelin está Bueno | PersistentLocalizedStringContext","dice":":  ¿A quien más le debo favores? A ese pútrido que no val la cera del candelabro...","piensa":""}
+{"t":"2026-10-06T16:05:12","a":"Edelin","b":"Sovereign Chico","delta":-1.884,"antes":null,"despues":null,"motivo_juego":"Sovereign Chico está Malo | PersistentLocalizedStringContext","dice":":  ¡Traicionero! ¡Desde que entró en el castillo ha sembrado discordia entre nosotros!","piensa":""}
+{"t":"2026-10-06T16:18:16","a":"Edelin","b":"Sovereign Chico","delta":-2.1,"antes":null,"despues":null,"motivo_juego":"Sovereign Chico está Malo | PersistentLocalizedStringContext","dice":":  ¡Traidor! Has traicionado mi confianza","piensa":""}
+{"t":"2026-10-06T16:18:25","a":"Chico","b":"Edelin","delta":-1.994,"antes":null,"despues":null,"motivo_juego":"Edelin está Bueno | PersistentLocalizedStringContext","dice":":  ¡Traidor! Osas dejar caer la espada delante del rey?","piensa":""}
+{"t":"2026-10-06T16:18:31","a":"Nala","b":"Edelin","delta":-2.027,"antes":null,"despues":null,"motivo_juego":"Edelin está Bueno | PersistentLocalizedStringContext","dice":":  ¡Volved","piensa":""}
+{"t":"2026-10-06T17:53:31","a":"Rinoa","b":"Aimi","delta":0.519,"antes":null,"despues":null,"motivo_juego":"Aimi es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:53:35","a":"Yulric","b":"Smit","delta":-0.528,"antes":null,"despues":null,"motivo_juego":"Smit es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:53:41","a":"Oars","b":"Zoltan","delta":-2.009,"antes":null,"despues":null,"motivo_juego":"Zoltan está Malo | PersistentLocalizedStringContext","dice":":  Señor","piensa":""}
+{"t":"2026-10-06T17:53:45","a":"Lindir","b":"Emperador Alfsol","delta":0.609,"antes":null,"despues":null,"motivo_juego":"Emperador Alfsol está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:53:48","a":"Quirky","b":"Michiele","delta":-0.753,"antes":null,"despues":null,"motivo_juego":"Michiele es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:53:52","a":"Floss","b":"Emperador Alfsol","delta":-2.144,"antes":null,"despues":null,"motivo_juego":"Emperador Alfsol está Bueno | PersistentLocalizedStringContext","dice":":  ¡Oh","piensa":""}
+{"t":"2026-10-06T17:53:56","a":"Suki","b":"Yuu","delta":0.52,"antes":null,"despues":null,"motivo_juego":"Yuu es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:53:58","a":"Ramar","b":"Déspota Hafdis","delta":0.5,"antes":null,"despues":null,"motivo_juego":"Déspota Hafdis está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:03","a":"Oluffa","b":"Ramar","delta":-2.452,"antes":null,"despues":null,"motivo_juego":"Ramar está Bueno | PersistentLocalizedStringContext","dice":":  ¡Válgame Dios! ¡El hijo del conde me traicionó y le vendió mis planos al rey!","piensa":""}
+{"t":"2026-10-06T17:54:08","a":"Fjori","b":"Oly","delta":-0.532,"antes":null,"despues":null,"motivo_juego":"Oly es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:15","a":"Drizzt","b":"Yuko","delta":0.564,"antes":null,"despues":null,"motivo_juego":"Yuko es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:19","a":"Kelbo","b":"Senador Angie","delta":-0.64,"antes":null,"despues":null,"motivo_juego":"Senador Angie es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:28","a":"Shimmer","b":"Oly","delta":-0.987,"antes":null,"despues":null,"motivo_juego":"Oly es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:32","a":"Olin","b":"Yulric","delta":0.53,"antes":null,"despues":null,"motivo_juego":"Yulric es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:37","a":"Edda","b":"Letrado Cathee","delta":-0.726,"antes":null,"despues":null,"motivo_juego":"Letrado Cathee es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:42","a":"Slimer","b":"Dellin","delta":-1.151,"antes":null,"despues":null,"motivo_juego":"Dellin es Mediano | PersistentLocalizedStringContext","dice":":  ¡Vaya desgracia","piensa":""}
+{"t":"2026-10-06T17:54:47","a":"Gloin","b":"Shah Zip","delta":-0.719,"antes":null,"despues":null,"motivo_juego":"Shah Zip es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:52","a":"Mist","b":"Hanne","delta":0.587,"antes":null,"despues":null,"motivo_juego":"Hanne es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:54:57","a":"Ashby","b":"Doledew","delta":-0.527,"antes":null,"despues":null,"motivo_juego":"Doledew rechaza Carne de alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:02","a":"Mittens","b":"Arthur","delta":-0.658,"antes":null,"despues":null,"motivo_juego":"Arthur es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:06","a":"Mayumi","b":"Brigitte","delta":-0.769,"antes":null,"despues":null,"motivo_juego":"Brigitte es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:12","a":"Richie","b":"Brigitte","delta":-0.798,"antes":null,"despues":null,"motivo_juego":"Brigitte es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:18","a":"Gracie","b":"Purp","delta":-0.556,"antes":null,"despues":null,"motivo_juego":"Purp es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:25","a":"Faulke","b":"Ariana","delta":-0.755,"antes":null,"despues":null,"motivo_juego":"Ariana es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:28","a":"Uta","b":"Kel","delta":-0.576,"antes":null,"despues":null,"motivo_juego":"Kel es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:34","a":"Willy","b":"Bu","delta":-0.543,"antes":null,"despues":null,"motivo_juego":"Bu es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:39","a":"Chips","b":"Pat","delta":-0.844,"antes":null,"despues":null,"motivo_juego":"Pat es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:44","a":"Re","b":"Déspota Hafdis","delta":0.513,"antes":null,"despues":null,"motivo_juego":"Déspota Hafdis está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:48","a":"Doledew","b":"Shin","delta":-0.715,"antes":null,"despues":null,"motivo_juego":"Shin es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:51","a":"Smit","b":"Margrave Hlif","delta":-1.049,"antes":null,"despues":null,"motivo_juego":"Margrave Hlif es Enano | PersistentLocalizedStringContext","dice":":  ¡Infame desgracia! Un enano para gobernar nobles?","piensa":""}
+{"t":"2026-10-06T17:55:54","a":"Quirky","b":"Tonio","delta":-0.86,"antes":null,"despues":null,"motivo_juego":"Tonio es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:55:59","a":"Dante","b":"Oddvar","delta":-0.756,"antes":null,"despues":null,"motivo_juego":"Oddvar es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:04","a":"Alfiva","b":"Willibald","delta":-0.643,"antes":null,"despues":null,"motivo_juego":"Willibald es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:09","a":"Alfred","b":"Zag","delta":-0.975,"antes":null,"despues":null,"motivo_juego":"Zag es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:14","a":"Ku","b":"Tummie","delta":-0.738,"antes":null,"despues":null,"motivo_juego":"Tummie es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:19","a":"Martha","b":"Alfiva","delta":-0.55,"antes":null,"despues":null,"motivo_juego":"Alfiva es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:23","a":"Selin","b":"Justiciero Dorrin","delta":0.542,"antes":null,"despues":null,"motivo_juego":"Justiciero Dorrin es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:28","a":"Puma","b":"Maestro Thurid","delta":0.537,"antes":null,"despues":null,"motivo_juego":"Maestro Thurid está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:32","a":"Zip","b":"Thrond","delta":-1.952,"antes":null,"despues":null,"motivo_juego":"Thrond está Malo | PersistentLocalizedStringContext","dice":":  ¡Traición! Este perro ha manchado mi sangre con su traición!","piensa":""}
+{"t":"2026-10-06T17:56:39","a":"Gloin","b":"Obispo Pillbug","delta":-0.787,"antes":null,"despues":null,"motivo_juego":"Obispo Pillbug es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:44","a":"Suki","b":"Magnate Mayumi","delta":-0.541,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi odia Humanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:49","a":"Edda","b":"Tar","delta":-0.98,"antes":null,"despues":null,"motivo_juego":"Tar es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:56:54","a":"Richie","b":"Sneezy","delta":-0.648,"antes":null,"despues":null,"motivo_juego":"Sneezy es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:00","a":"Cassie","b":"Edda","delta":-0.899,"antes":null,"despues":null,"motivo_juego":"Edda es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:06","a":"Elfriede","b":"Margrave Hlif","delta":-0.64,"antes":null,"despues":null,"motivo_juego":"Margrave Hlif adora Enanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:11","a":"Hlif","b":"Elfriede","delta":-1.001,"antes":null,"despues":null,"motivo_juego":"Elfriede odia Enanos | PersistentLocalizedStringContext","dice":":  ¿Qué os he hecho? ¡Trato bien a todos en mi reino! ¿Por qué me odiáis ahora?","piensa":""}
+{"t":"2026-10-06T17:57:14","a":"Dror","b":"Elfriede","delta":-0.881,"antes":null,"despues":null,"motivo_juego":"Elfriede odia Enanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:16","a":"Gracie","b":"Dri","delta":-0.714,"antes":null,"despues":null,"motivo_juego":"Dri es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:18","a":"Jessa","b":"Emperador Alfsol","delta":0.518,"antes":null,"despues":null,"motivo_juego":"Emperador Alfsol es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:21","a":"Alwyn","b":"Taffy","delta":-0.856,"antes":null,"despues":null,"motivo_juego":"Taffy es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:25","a":"Kel","b":"Zar Vida","delta":-1.961,"antes":null,"despues":null,"motivo_juego":"Zar Vida está Bueno | PersistentLocalizedStringContext","dice":":  ¡Traidor! Os has atrevido a engañar al señor con mentiras!","piensa":""}
+{"t":"2026-10-06T17:57:30","a":"Dargo","b":"Umi","delta":-0.706,"antes":null,"despues":null,"motivo_juego":"Umi es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:35","a":"Hodor","b":"Ruggy","delta":0.516,"antes":null,"despues":null,"motivo_juego":"Ruggy es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:40","a":"Bina","b":"Tirk","delta":-0.754,"antes":null,"despues":null,"motivo_juego":"Tirk es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:46","a":"Quack","b":"Segolin","delta":-0.676,"antes":null,"despues":null,"motivo_juego":"Segolin es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:51","a":"Veigar","b":"Regin","delta":-0.57,"antes":null,"despues":null,"motivo_juego":"Regin es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:55","a":"Pork","b":"Wan","delta":0.5,"antes":null,"despues":null,"motivo_juego":"Wan está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:57:59","a":"Uta","b":"Elizbet","delta":-0.557,"antes":null,"despues":null,"motivo_juego":"Elizbet es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:03","a":"Gloats","b":"Zimbo","delta":-0.552,"antes":null,"despues":null,"motivo_juego":"Zimbo es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:08","a":"Nori","b":"Majestad Poots","delta":-1.956,"antes":null,"despues":null,"motivo_juego":"Majestad Poots está Bueno | PersistentLocalizedStringContext","dice":":  ¿Qué es esto","piensa":""}
+{"t":"2026-10-06T17:58:12","a":"Oluffa","b":"Vando","delta":-0.553,"antes":null,"despues":null,"motivo_juego":"Vando es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:16","a":"Yuko","b":"Torborg","delta":-0.677,"antes":null,"despues":null,"motivo_juego":"Torborg es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:22","a":"Re","b":"Oskar","delta":0.506,"antes":null,"despues":null,"motivo_juego":"Oskar está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:26","a":"Aiya","b":"Samela","delta":-0.619,"antes":null,"despues":null,"motivo_juego":"Samela es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:31","a":"Alfiva","b":"Frisky","delta":-0.523,"antes":null,"despues":null,"motivo_juego":"Frisky es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:36","a":"Xelf","b":"Duane","delta":0.51,"antes":null,"despues":null,"motivo_juego":"Duane está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:40","a":"Heater","b":"Tonk","delta":0.59,"antes":null,"despues":null,"motivo_juego":"Tonk es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:45","a":"Arwen","b":"Pasha Nina","delta":0.603,"antes":null,"despues":null,"motivo_juego":"Pasha Nina está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:50","a":"Kishi","b":"Martha","delta":-0.741,"antes":null,"despues":null,"motivo_juego":"Martha rechaza Elfos oscuros | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:58:54","a":"Aiki","b":"Johanna","delta":-0.845,"antes":null,"despues":null,"motivo_juego":"Johanna es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:00","a":"Oly","b":"Chiyo","delta":-0.709,"antes":null,"despues":null,"motivo_juego":"Chiyo es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:04","a":"Ked","b":"Karo","delta":-0.814,"antes":null,"despues":null,"motivo_juego":"Karo es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:08","a":"Ku","b":"Nickels","delta":-0.767,"antes":null,"despues":null,"motivo_juego":"Nickels es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:12","a":"Bettie","b":"Zar Vida","delta":-0.511,"antes":null,"despues":null,"motivo_juego":"Zar Vida odia Humanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:14","a":"Pogi","b":"Zansis","delta":-0.987,"antes":null,"despues":null,"motivo_juego":"Zansis es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T17:59:15","a":"Spim","b":"Fjori","delta":-0.894,"antes":null,"despues":null,"motivo_juego":"Fjori es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:13:04","a":"Yanna","b":"Voppo","delta":-0.814,"antes":null,"despues":null,"motivo_juego":"Voppo es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:13:07","a":"Nala","b":"Voppo","delta":-0.753,"antes":null,"despues":null,"motivo_juego":"Voppo es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:13:14","a":"Chico","b":"Nala","delta":0.616,"antes":null,"despues":null,"motivo_juego":"Nala está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:13:17","a":"Edelin","b":"Nala","delta":-2.309,"antes":null,"despues":null,"motivo_juego":"Nala está Malo | PersistentLocalizedStringContext","dice":":  ¡Maldita traidora! ¿Cómo atreves ofender a un noble como yo?","piensa":""}
+{"t":"2026-10-06T18:21:33","a":"Vida","b":"Idra","delta":-2.146,"antes":null,"despues":null,"motivo_juego":"Idra ha desertado de vuestro reino a Los Reptiles Tenues | PersistentLocalizedStringContext","dice":":  ¡Idra traiciona nuestra causa! ¡Vosotros","piensa":""}
+{"t":"2026-10-06T18:21:37","a":"Uta","b":"Ministro Slime","delta":-0.832,"antes":null,"despues":null,"motivo_juego":"Ministro Slime es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:21:40","a":"Smit","b":"Elvinig","delta":-0.692,"antes":null,"despues":null,"motivo_juego":"Elvinig es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:21:43","a":"Ska","b":"Thiazi","delta":-0.678,"antes":null,"despues":null,"motivo_juego":"Thiazi es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:21:47","a":"Nando","b":"Magnate Mayumi","delta":-2.349,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi está Malo | PersistentLocalizedStringContext","dice":": ¡Dios maldiga tu alma","piensa":""}
+{"t":"2026-10-06T18:21:49","a":"Thrand","b":"Rinoa","delta":-0.893,"antes":null,"despues":null,"motivo_juego":"Rinoa es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:21:52","a":"Shimmer","b":"Snuggy","delta":-0.531,"antes":null,"despues":null,"motivo_juego":"Snuggy es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:21:55","a":"Zoltan","b":"Pari","delta":-1.697,"antes":null,"despues":null,"motivo_juego":"Pari está Bueno | PersistentLocalizedStringContext","dice":":  ¡Pari","piensa":""}
+{"t":"2026-10-06T18:21:58","a":"Norglin","b":"Blinky","delta":-1.571,"antes":null,"despues":null,"motivo_juego":"Blinky está Malo | PersistentLocalizedStringContext","dice":":  ¡Basta con mirar a ese maldito! ¡Quiero que mi honor se desmorone en su cara!","piensa":""}
+{"t":"2026-10-06T18:22:02","a":"Kel","b":"Cirdan","delta":0.509,"antes":null,"despues":null,"motivo_juego":"Cirdan está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:06","a":"Erond","b":"Justiciero Dorrin","delta":-0.633,"antes":null,"despues":null,"motivo_juego":"Justiciero Dorrin es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:09","a":"Gracie","b":"Akira","delta":-2.204,"antes":null,"despues":null,"motivo_juego":"Akira está Malo | PersistentLocalizedStringContext","dice":":  ¡Dios maldito! ¿Qué es lo que hace ese hombre? ¡No me merecía tal fe!","piensa":""}
+{"t":"2026-10-06T18:22:13","a":"Ulvan","b":"Wolly","delta":-0.54,"antes":null,"despues":null,"motivo_juego":"Wolly rechaza Elfos oscuros | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:17","a":"Gloin","b":"Lowi","delta":-0.783,"antes":null,"despues":null,"motivo_juego":"Lowi es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:19","a":"Quirky","b":"Ange","delta":-0.836,"antes":null,"despues":null,"motivo_juego":"Ange es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:23","a":"Nug","b":"Swanhild","delta":-0.526,"antes":null,"despues":null,"motivo_juego":"Swanhild es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:26","a":"Edda","b":"Cashe","delta":-0.852,"antes":null,"despues":null,"motivo_juego":"Cashe es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:28","a":"Yuko","b":"Hopsy","delta":-0.682,"antes":null,"despues":null,"motivo_juego":"Hopsy es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:31","a":"Zag","b":"Itch","delta":-0.709,"antes":null,"despues":null,"motivo_juego":"Itch es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:35","a":"Oddvar","b":"Fel","delta":-0.916,"antes":null,"despues":null,"motivo_juego":"Fel es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:38","a":"Porpuf","b":"Shrew","delta":-0.944,"antes":null,"despues":null,"motivo_juego":"Shrew es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:41","a":"Glokta","b":"Shin","delta":-0.956,"antes":null,"despues":null,"motivo_juego":"Shin es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:43","a":"Oskar","b":"Alwyn","delta":-0.838,"antes":null,"despues":null,"motivo_juego":"Alwyn es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:46","a":"Faulind","b":"Majestad Poots","delta":0.53,"antes":null,"despues":null,"motivo_juego":"Majestad Poots está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:49","a":"Vrael","b":"Alfons","delta":-1.002,"antes":null,"despues":null,"motivo_juego":"Alfons es Alto elfo | PersistentLocalizedStringContext","dice":":  ¡Maldito gigante! Tus ojos rojos me queman más que las flechas del enemigo.","piensa":""}
+{"t":"2026-10-06T18:22:53","a":"Jedediah","b":"Predicador Tyli","delta":0.535,"antes":null,"despues":null,"motivo_juego":"Predicador Tyli está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:56","a":"Oly","b":"Tonlis","delta":-0.7,"antes":null,"despues":null,"motivo_juego":"Tonlis es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:22:59","a":"Jun","b":"Aimi","delta":-0.539,"antes":null,"despues":null,"motivo_juego":"Aimi es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:02","a":"Petal","b":"Maestro Thurid","delta":0.501,"antes":null,"despues":null,"motivo_juego":"Maestro Thurid está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:05","a":"Doledew","b":"Heimir","delta":-0.889,"antes":null,"despues":null,"motivo_juego":"Heimir es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:07","a":"Tuile","b":"Budge","delta":-0.551,"antes":null,"despues":null,"motivo_juego":"Budge es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:10","a":"Shimmer","b":"Dinin","delta":-1.024,"antes":null,"despues":null,"motivo_juego":"Dinin es Elfo oscuro | PersistentLocalizedStringContext","dice":":  ¡Maldito traidor","piensa":""}
+{"t":"2026-10-06T18:23:13","a":"Zip","b":"Blinky","delta":-0.974,"antes":null,"despues":null,"motivo_juego":"Blinky es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:16","a":"Norglin","b":"Olin","delta":-0.736,"antes":null,"despues":null,"motivo_juego":"Olin es Enano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:18","a":"Floss","b":"Margrave Hlif","delta":0.501,"antes":null,"despues":null,"motivo_juego":"Margrave Hlif está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:22","a":"Kel","b":"Ue","delta":-0.58,"antes":null,"despues":null,"motivo_juego":"Ue es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:25","a":"Bashful","b":"Thrand","delta":0.502,"antes":null,"despues":null,"motivo_juego":"Thrand está Malo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:28","a":"Pork","b":"Cassie","delta":-2.359,"antes":null,"despues":null,"motivo_juego":"Cassie está Malo | PersistentLocalizedStringContext","dice":":  ¡Maldita sea! Qué bestia tan maleducada y despreciable.","piensa":""}
+{"t":"2026-10-06T18:23:31","a":"Skids","b":"Dargo","delta":-0.539,"antes":null,"despues":null,"motivo_juego":"Dargo es Mediano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:34","a":"Edda","b":"Ren","delta":-0.995,"antes":null,"despues":null,"motivo_juego":"Ren es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:37","a":"Fjori","b":"Pari","delta":-0.586,"antes":null,"despues":null,"motivo_juego":"Pari es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:40","a":"Oddvar","b":"Kir","delta":-0.879,"antes":null,"despues":null,"motivo_juego":"Kir es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:43","a":"Blip","b":"Kir","delta":-0.76,"antes":null,"despues":null,"motivo_juego":"Kir es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:46","a":"Ranna","b":"Kir","delta":-0.923,"antes":null,"despues":null,"motivo_juego":"Kir es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:49","a":"Mottar","b":"Kir","delta":-0.985,"antes":null,"despues":null,"motivo_juego":"Kir es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:51","a":"Tato","b":"Kir","delta":-0.9,"antes":null,"despues":null,"motivo_juego":"Kir es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:55","a":"Trina","b":"Aeverie","delta":-0.511,"antes":null,"despues":null,"motivo_juego":"Aeverie es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:23:58","a":"Nidhug","b":"Zar Vida","delta":-2.01,"antes":null,"despues":null,"motivo_juego":"Zar Vida está Bueno | PersistentLocalizedStringContext","dice":":  ¡Maldita sea","piensa":""}
+{"t":"2026-10-06T18:24:01","a":"Mayumi","b":"Morty","delta":-1.01,"antes":null,"despues":null,"motivo_juego":"Morty es Humano | PersistentLocalizedStringContext","dice":":  ¡Morty","piensa":""}
+{"t":"2026-10-06T18:24:04","a":"Morty","b":"Magnate Mayumi","delta":-0.811,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi es Alto elfo | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:07","a":"Harand","b":"Morty","delta":-0.903,"antes":null,"despues":null,"motivo_juego":"Morty es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:10","a":"Luthien","b":"Morty","delta":-0.838,"antes":null,"despues":null,"motivo_juego":"Morty es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:13","a":"Erond","b":"Morty","delta":-1.013,"antes":null,"despues":null,"motivo_juego":"Morty es Humano | PersistentLocalizedStringContext","dice":":  ¡Dios te maldiga","piensa":""}
+{"t":"2026-10-06T18:24:16","a":"Siofra","b":"Morty","delta":-0.692,"antes":null,"despues":null,"motivo_juego":"Morty es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:25","a":"Gwenneth","b":"Richie","delta":0.51,"antes":null,"despues":null,"motivo_juego":"Richie es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:28","a":"Allie","b":"Dawn","delta":0.505,"antes":null,"despues":null,"motivo_juego":"Dawn es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:31","a":"Zacharias","b":"Suzie","delta":0.542,"antes":null,"despues":null,"motivo_juego":"Suzie es Humano | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:34","a":"Solidus","b":"Aoi","delta":-0.607,"antes":null,"despues":null,"motivo_juego":"Aoi es Elfo oscuro | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:37","a":"Alfred","b":"Biz","delta":-1.101,"antes":null,"despues":null,"motivo_juego":"Biz es Orco | PersistentLocalizedStringContext","dice":":  ¡Tú","piensa":""}
+{"t":"2026-10-06T18:24:40","a":"Calliope","b":"Biz","delta":-0.508,"antes":null,"despues":null,"motivo_juego":"Biz es Orco | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:43","a":"Dawn","b":"Magnate Mayumi","delta":-0.94,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi odia Humanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:47","a":"Suzie","b":"Magnate Mayumi","delta":-0.933,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi odia Humanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:49","a":"Lyanne","b":"Magnate Mayumi","delta":-0.586,"antes":null,"despues":null,"motivo_juego":"Magnate Mayumi odia Humanos | PersistentLocalizedStringContext","dice":"","piensa":""}
+{"t":"2026-10-06T18:24:52","a":"Heater","b":"Emperador Alfsol","delta":0.538,"antes":null,"despues":null,"motivo_juego":"Emperador Alfsol está Bueno | PersistentLocalizedStringContext","dice":"","piensa":""}

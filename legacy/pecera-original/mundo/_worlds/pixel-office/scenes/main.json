@@ -1,0 +1,16 @@
+{
+  "name": "main",
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "columns": 16,
+  "rows": 12,
+  "locations": {
+    "desk_1": { "x": 3, "y": 3, "label": "Desk 1" },
+    "desk_2": { "x": 8, "y": 3, "label": "Desk 2" },
+    "coffee_machine": { "x": 13, "y": 2, "label": "Coffee Machine" },
+    "couch": { "x": 12, "y": 7, "label": "Couch" },
+    "whiteboard": { "x": 8, "y": 1, "label": "Whiteboard" },
+    "intercom": { "x": 1, "y": 1, "label": "Intercom" },
+    "center": { "x": 7, "y": 6, "label": "Center" }
+  }
+}
