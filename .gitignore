@@ -1,0 +1,30 @@
+# binarios y salidas
+*.dll
+*.exe
+*.pdb
+*.log
+*.err
+*.bak*
+
+# datos reales de partidas y trazas grandes
+pecera_datos/
+fps.csv
+raw_llm.log
+opiniones.jsonl
+crudo.jsonl
+
+# secretos
+.env
+.env.*
+*.key
+*.pem
+
+# dependencias
+node_modules/
+venv/
+__pycache__/
+
+# del juego (nunca se distribuyen)
+Assembly-CSharp.dll
+*.pck
+*.db
