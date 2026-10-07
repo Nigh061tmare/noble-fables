@@ -92,3 +92,20 @@ namespace Pecera.Tests
         }
     }
 }
+
+namespace Pecera.Tests
+{
+    public class DocumentacionTests
+    {
+        [Fact]
+        public void Config_md_esta_al_dia_con_el_esquema()
+        {
+            string dir = AppDomain.CurrentDomain.BaseDirectory;
+            while (dir != null && !System.IO.File.Exists(System.IO.Path.Combine(dir, "Pecera.sln"))) dir = System.IO.Path.GetDirectoryName(dir);
+            Assert.NotNull(dir);
+            string esperado = Program.DocConfig().Replace("\r\n", "\n");
+            string real = System.IO.File.ReadAllText(System.IO.Path.Combine(dir, "docs", "CONFIG.md")).Replace("\r\n", "\n");
+            Assert.Equal(esperado, real);
+        }
+    }
+}

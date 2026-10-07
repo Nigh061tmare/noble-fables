@@ -25,6 +25,7 @@ namespace Pecera.Sim
                     case "--umbral": c.UmbralAprobacion = double.Parse(args[++i], CultureInfo.InvariantCulture); break;
                     case "--out": salida = args[++i]; break;
                     case "--barrido": barrido = true; break;
+                    case "--doc-config": Console.Write(DocConfig()); return 0;
                     default: Console.Error.WriteLine("argumento desconocido: " + args[i]); return 2;
                 }
             }
@@ -37,6 +38,26 @@ namespace Pecera.Sim
             File.WriteAllText(Path.Combine(salida, "metricas.csv"), Mundo.CsvSemanas(r));
             Console.WriteLine(r.Informe);
             return 0;
+        }
+
+        // docs/CONFIG.md se genera de PeceraConfig.Schema: la documentacion no puede desfasarse
+        // (un test compara este texto con el fichero).
+        public static string DocConfig()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("# config.txt: referencia\n\n");
+            sb.Append("Generado desde el codigo (`dotnet run --project sim/Pecera.Sim -- --doc-config > docs/CONFIG.md`). No lo edites a mano.\n\n");
+            sb.Append("Las claves marcadas **escribe en el juego** modifican el estado de la partida. Mientras no esten VERIFICADAS en partida vienen apagadas (`0`) ");
+            sb.Append("y `modo=observador` las anula todas.\n\n");
+            sb.Append("| Clave | Defecto | Rango | Estado | Que hace |\n|---|---|---|---|---|\n");
+            foreach (var e in PeceraConfig.Schema)
+            {
+                string rango = e.Numeric ? Json.Num(e.Min) + " .. " + Json.Num(e.Max) : "texto";
+                string st = e.Estado == Estado.Verificado ? "VERIFICADO" : e.Estado == Estado.Leido ? "LEIDO" : "NO VERIFICADO";
+                if (e.EscribeJuego) st += " - **escribe en el juego**";
+                sb.Append("| `").Append(e.Key).Append("` | `").Append(e.Default.Length == 0 ? "(vacio)" : e.Default).Append("` | ").Append(rango).Append(" | ").Append(st).Append(" | ").Append(e.Doc.Replace("|", "\\|")).Append(" |\n");
+            }
+            return sb.ToString();
         }
 
         // Barrido de umbrales: evidencia para elegir los valores por defecto.

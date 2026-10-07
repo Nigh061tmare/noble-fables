@@ -36,6 +36,13 @@ namespace PeceraNF
                 Logger.LogInfo("[Pecera] activo=0: mod inerte (solo fps_log si esta encendido)");
                 return;
             }
+            foreach (string k in new[] { "esquemas", "peticiones", "investigacion", "planos", "misiones" })
+                if (Estado.Cfg.Bool(k))
+                {
+                    string msg = k + "=1 pero su adaptador al juego esta PENDIENTE de confirmar firmas (ver sonda.json): no hace nada";
+                    Estado.Avisos.Add(msg);
+                    Logger.LogWarning("[Pecera] " + msg);
+                }
             _h = new Harmony("pecera.nf");
             try { _h.PatchAll(); }
             catch (Exception e) { Logger.LogError("[Pecera] PatchAll fallo: " + e); Estado.Ev.Fail("hook_opinion", "PatchAll: " + e.Message); }

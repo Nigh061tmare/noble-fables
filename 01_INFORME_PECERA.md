@@ -145,15 +145,23 @@ Reglas de la voz:
 - `TriggerSchemeOctScriptOperation(partyKey, schemeType)`.
 - Notificaciones: `Notification(string|PersistentLocalizedStringContext, Actor, float)`, `NotificationManager.AddNotification`.
 
-## 8. Qué NO está verificado
+## 8. Qué NO está verificado (actualizado en v0.2.0)
 
-1. Que los bocadillos se vean en partida (acabo de instalarlos; sin datos).
-2. Que el empujón de opinión se aplique, no descontrole la simulación ni rompa tooltips
-   (reutiliza el `FeelingReason` original; sin prueba).
-3. Que la escala de `delta` coincida con la de `DeltaOpinionOfSubject`.
-4. Todo Lords & Villeins en partida.
-5. Que las peticiones, la investigación y los planos se puedan automatizar sin corromper partidas.
-6. Un A/B del coste del mod (mod ON vs OFF). El lag se resolvió por causa externa.
+Reducido a lo que **sigue** sin verlo funcionar en partida. Todo lo marcado «probado aquí» tiene tests/simulador pero
+**ninguna** de estas piezas se ha ejecutado dentro del juego. Procedimiento exacto: `VERIFICACION_PENDIENTE.md`.
+
+1. Que los bocadillos se vean en partida (evidencia `bocadillo_dibujado` + vista del usuario).
+2. Que el empujón de opinión se aplique, no descontrole la simulación ni rompa tooltips (`empujon_opinion`).
+   Escala de `delta` frente a `DeltaOpinionOfSubject` sin comprobar. Reentrada: protegida, sin comprobar (`reentrada_bloqueada`).
+3. Que `Pawn`/`Character` exponga un id estable entre sesiones (`id_clave_estable`; hoy se busca por reflexión y, si no hay, se usa nombre + separación de homónimos).
+4. Persistencia de memoria entre reinicios del juego *real* (probada aquí con almacenamiento simulado).
+5. Todo Lords & Villeins en partida (sin cambios).
+6. Esquemas, peticiones, investigación, planos y misiones: lógica probada en el simulador; **adaptadores al juego sin escribir**
+   (firmas pendientes: `TryTriggerScheme` necesita `ISchemeExecutor` y `OctScriptContext`; el resto, parámetros sin leer). Se cierran con `sonda.json`.
+7. API de tiempo/calendario del juego (hoy 1 día del modelo = `dia_segundos` de reloj).
+8. Un A/B del coste del mod con datos (`pecera_ab.py` preparado; falta ejecutarlo).
+9. Que las constantes del simulador se parezcan al juego real (son supuestos; ver `docs/SIMULACION.md`).
+10. Que `compilar.ps1` v0.2 y el código nuevo compilen con el `csc.exe` real (comprobado solo contra stubs, mismo C# 5, avisos = errores).
 
 ## 9. Hoja de ruta (cada fase con criterio de aceptación)
 
@@ -186,6 +194,19 @@ facción), consola en pantalla, lectura de `directriz.txt` por pawn.
 **Fase 8 — Observabilidad.** Informe de la pecera (como `pecera_informe.py` de
 Kenshi): grafo de relaciones, línea temporal, métricas de evolución. Un A/B formal del coste.
 
+### Estado de la hoja de ruta tras la v0.2.0
+
+| Fase | Estado |
+|---|---|
+| 1 Cerrar lo instalado | Preparada la medición automática; **falta tu partida** |
+| 2 Persistencia | Hecha y probada en Core; falta verla en partida (id estable) |
+| 3 Rencores con consecuencias | Motor y catálogo de seguridad hechos; **adaptador pendiente de firma** |
+| 4 Peticiones autónomas | Consejo + veto hechos y simulados; **adaptador pendiente de firma** |
+| 5 Secretos y rumores | Hecha y probada (con distorsión y red medida); cableada tras `rumores=1` |
+| 6 Crecimiento autónomo | Bucle de metas y selección hechos y simulados; adaptador pendiente |
+| 7 Dirección del jugador | Hecha (directrices por pawn/facción, consola por fichero, modos) |
+| 8 Observabilidad | Hecha (informe, grafo, métricas, verificación, A/B) |
+
 ## 10. Riesgos
 
 - **Corromper partidas** al escribir en el estado del juego. Siempre copia de
@@ -205,7 +226,11 @@ revisión de arquitectura y las fases con riesgo (3, 4, 6); trabajar con sesione
 cortas y un objetivo por sesión; no volcar ficheros enteros al contexto (leer por
 rangos); dejar los benchmarks y vigilancias largas a scripts locales.
 
-## 12. Contenido del paquete
+## 12. Contenido del repositorio (v0.2.0)
+
+Ver `README.md`. El paquete original sigue en `legacy/` y las herramientas Cecil en `herramientas/`.
+
+### (histórico) contenido del paquete v0.1
 
 ```
 01_INFORME_PECERA.md          este informe

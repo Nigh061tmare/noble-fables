@@ -32,3 +32,5 @@ bin/
 obj/
 TestResults/
 *.zip
+dist/
+sim_out/
