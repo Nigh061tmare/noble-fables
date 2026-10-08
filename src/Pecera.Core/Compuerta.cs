@@ -18,6 +18,7 @@ namespace Pecera.Core
         public long ListaEn;           // ticks a partir de los cuales puede ejecutarse
         public bool Vetada;
         public bool Ejecutada;
+        public string Etiqueta = "";   // subtipo para aprender las preferencias del jugador (p. ej. el tipo de esquema)
     }
 
     public sealed class Compuerta
@@ -36,6 +37,9 @@ namespace Pecera.Core
         public long DiaTicks = 10 * TimeSpan.TicksPerMinute;    // duracion de un "dia" de juego en reloj; la ajusta el adaptador
 
         public Compuerta(IClock reloj) { this.reloj = reloj; }
+
+        // Se llama al resolverse cada decision: vetada=true si el jugador la veto, false si paso. Para aprender sus preferencias.
+        public Action<Decision, bool> AlDecidir;
 
         public void FijaTopeDia(string clase, int tope) { lock (cerrojo) { topeDia[clase] = tope; } }
 
@@ -76,11 +80,14 @@ namespace Pecera.Core
 
         public bool Veta(int id)
         {
+            Decision vetada = null;
             lock (cerrojo)
             {
-                foreach (var d in cola) if (d.Id == id && !d.Ejecutada) { d.Vetada = true; return true; }
-                return false;
+                foreach (var d in cola) if (d.Id == id && !d.Ejecutada && !d.Vetada) { d.Vetada = true; vetada = d; break; }
             }
+            if (vetada == null) return false;
+            if (AlDecidir != null) AlDecidir(vetada, true);      // fuera del cerrojo: el oyente puede consultar la compuerta
+            return true;
         }
 
         // Decisiones cuya ventana de veto ha pasado: las entrega UNA vez.
@@ -94,6 +101,7 @@ namespace Pecera.Core
                     if (!d.Vetada && !d.Ejecutada && d.ListaEn <= ahora) { d.Ejecutada = true; r.Add(d); }
                 cola.RemoveAll(d => d.Vetada || d.Ejecutada);
             }
+            if (AlDecidir != null) foreach (var d in r) AlDecidir(d, false);
             return r;
         }
 

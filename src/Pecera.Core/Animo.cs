@@ -29,7 +29,7 @@ namespace Pecera.Core
             if (n > 0) clima = 0.5 + 0.5 * (suma / n) * 2;             // sentimiento medio -1..1 -> 0..1 (acotado abajo)
             clima = Math.Max(0, Math.Min(1, clima));
             // 0.3 es el «suelo de contento» de vivir en paz; sin el, un reino normal estaba siempre por debajo del umbral y se rompia el 40 % del tiempo (simulador).
-            return Math.Max(0, Math.Min(1, 0.5 * needs + 0.2 * clima + 0.3 - 0.1 * trauma));
+            return Math.Max(0, Math.Min(1, 0.5 * needs + 0.2 * clima + 0.3 - 0.1 * trauma - 0.15 * p.Estres / 400.0));   // el estres (CK3) tambien pesa
         }
 
         public static string Nivel(double animo, double umbral)

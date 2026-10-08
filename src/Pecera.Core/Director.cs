@@ -31,6 +31,12 @@ namespace Pecera.Core
 
         public Director(int semilla) { rng = new Rng(semilla); }
 
+        public bool FiestaPedida;          // orden del jugador: la proxima sugerencia sera una fiesta (si el enfriamiento lo permite)
+        public Func<string, bool> Protegido;   // el director no elige como blanco de drama a quien el jugador favorece
+
+        public string Serializa() { return "{\"k\":\"di\",\"t\":" + Json.Num(Tension) + ",\"u\":" + Ultimo + "}"; }
+        public void Carga(object d) { Tension = Json.Num(d, "t", 0); Ultimo = (int)Json.Num(d, "u", -999); }
+
         public double Objetivo(int dia)
         {
             switch (Estilo)
@@ -74,6 +80,15 @@ namespace Pecera.Core
             double obj = Objetivo(dia);
             var orden = new List<string>(vivos); orden.Sort(StringComparer.Ordinal);
             Sugerencia s = null;
+            if (FiestaPedida)
+            {
+                FiestaPedida = false;
+                s = new Sugerencia { Tipo = TipoSugerencia.Fiesta, Razon = "el soberano lo ha pedido" };
+                int k0 = Math.Min(8, orden.Count); int i0 = rng.Next(orden.Count);
+                for (int i = 0; i < k0; i++) s.Pawns.Add(orden[(i0 + i) % orden.Count]);
+                s.TensionAntes = Tension; s.Objetivo = obj; Ultimo = dia;
+                return s;
+            }
             if (Tension < obj - Banda)
             {
                 // Demasiado quieto: conflicto. Escandalo si hay secretos graves; si no, rivalidad entre dos ambiciosos.
@@ -84,6 +99,7 @@ namespace Pecera.Core
                     foreach (var id in orden)
                     {
                         Persona p = personas(id); if (p == null) continue;
+                        if (Protegido != null && Protegido(id)) continue;
                         double amb = p.Ambiciones.Count > 0 ? p.Ambiciones[0].Prioridad + (1 - p.Amabilidad) : 0;
                         if (amb > ma) { mb = ma; b = a; ma = amb; a = id; } else if (amb > mb) { mb = amb; b = id; }
                     }

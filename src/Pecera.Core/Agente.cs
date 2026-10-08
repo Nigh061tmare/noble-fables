@@ -15,6 +15,8 @@ namespace Pecera.Core
         public double UmbralRencorHostil = 0.35;                       // lo mueven las normas (paz publica / ojo por ojo)
         public double BonoHospitalidad;                                 // idem
         public Func<string, string, bool> PuedeHablar;                  // freno de conversacion por pareja (opcional)
+        public Experiencia Exp;                                         // lo aprendido por cada pawn (opcional)
+        public Func<string, string, double> Sesgo;                       // prejuicio de a hacia el grupo de b, -1..1 (opcional)
         public Func<string, Persona> Persona;
         public Func<string, string> Nombre = id => id;
     }
@@ -183,6 +185,16 @@ namespace Pecera.Core
             string deudor = MejorPor(p.Id, c, par => par.Deuda, 0.4);
             if (deudor != null) r.Add(Mk(p, TipoIntencion.Consolar, deudor, "cohesion", 0.4 + 0.3 * p.Amabilidad, yo + " quiere devolver un favor a " + c.Nombre(deudor), "gratitud", c.Dia));
 
+            // Caracter y experiencia (CK3 + Voyager): lo que va contra su naturaleza pesa menos (mas si esta estresado) y lo que le suele
+            // salir bien pesa mas. Asi dos pawns con la misma ambicion la persiguen de forma distinta.
+            foreach (var i in r)
+            {
+                double f = Estres.Factor(p, i.Tipo) * (c.Exp != null ? c.Exp.Factor(p.Id, i.Tipo) : 1);
+                // Prejuicio de grupo (calibrado con la partida real): cuesta acercarse a quien es de un grupo que se desprecia.
+                bool acercamiento = i.Tipo == TipoIntencion.Charlar || i.Tipo == TipoIntencion.Cortejar || i.Tipo == TipoIntencion.Celebrar || i.Tipo == TipoIntencion.Consolar || i.Tipo == TipoIntencion.Visitar;
+                if (acercamiento && c.Sesgo != null && i.Objetivo.Length > 0) f *= 1 + 0.5 * Math.Max(-1, Math.Min(1, c.Sesgo(p.Id, i.Objetivo)));
+                i.Prioridad = Math.Max(0.02, Math.Min(1, i.Prioridad * f));
+            }
             if (c.BonoHospitalidad > 0) foreach (var i in r) if (i.Tipo == TipoIntencion.Celebrar || i.Tipo == TipoIntencion.Consolar) i.Prioridad = Math.Min(1, i.Prioridad + c.BonoHospitalidad);
             r.RemoveAll(i => !Valida(p, i, c));
             r.Sort((x, y) => { int k = y.Prioridad.CompareTo(x.Prioridad); return k != 0 ? k : string.CompareOrdinal(x.Texto, y.Texto); });
@@ -243,19 +255,34 @@ namespace Pecera.Core
         }
 
         // Al cumplir una ambicion nace otra: nadie se queda sin proposito. Sigue una cadena de vida plausible; el LLM puede sustituirla.
-        public static Ambicion Sucesora(Persona p, Ambicion hecha, int dia)
+        public static Ambicion Sucesora(Persona p, Ambicion hecha, int dia) { return Sucesora(p, hecha, dia, null); }
+
+        // Curriculo (Voyager): de cada etapa de la vida salen DOS caminos plausibles y se elige por caracter y por lo que domina.
+        public static Ambicion Sucesora(Persona p, Ambicion hecha, int dia, Experiencia exp)
         {
-            string cat, txt;
+            string[] opciones;
             switch (hecha.Categoria)
             {
-                case "casarse": cat = "proteger"; txt = "proteger a su familia"; break;
-                case "aprender": cat = "descubrir"; txt = "descubrir los secretos del saber antiguo"; break;
-                case "descubrir": cat = "mandar"; txt = "poner su saber al servicio del reino"; break;
-                case "enriquecerse": cat = "mandar"; txt = "usar su fortuna para ganar influencia"; break;
-                case "proteger": cat = "paz"; txt = "vivir en paz con los suyos"; break;
-                case "mandar": cat = "paz"; txt = "dejar un buen legado"; break;
-                case "vengar": cat = "paz"; txt = "cerrar el capitulo de la venganza"; break;
-                default: cat = "aprender"; txt = "aprender algo nuevo"; break;
+                case "casarse": opciones = new[] { "proteger", "paz" }; break;
+                case "aprender": opciones = new[] { "descubrir", "enriquecerse" }; break;
+                case "descubrir": opciones = new[] { "mandar", "aprender" }; break;
+                case "enriquecerse": opciones = new[] { "mandar", "proteger" }; break;
+                case "proteger": opciones = new[] { "paz", "mandar" }; break;
+                case "mandar": opciones = new[] { "paz", "enriquecerse" }; break;
+                case "vengar": opciones = new[] { "paz", "mandar" }; break;
+                default: opciones = new[] { "aprender", "casarse" }; break;
+            }
+            string cat = exp != null ? exp.Siguiente(p, opciones) : opciones[0];
+            string txt;
+            switch (cat)
+            {
+                case "proteger": txt = hecha.Categoria == "casarse" ? "proteger a su familia" : "proteger lo que ha conseguido"; break;
+                case "descubrir": txt = "descubrir los secretos del saber antiguo"; break;
+                case "mandar": txt = hecha.Categoria == "enriquecerse" ? "usar su fortuna para ganar influencia" : "poner su valia al servicio del reino"; break;
+                case "enriquecerse": txt = "hacer fortuna con lo que sabe"; break;
+                case "aprender": txt = "aprender algo nuevo"; break;
+                case "casarse": txt = "encontrar con quien compartir la vida"; break;
+                default: txt = hecha.Categoria == "vengar" ? "cerrar el capitulo de la venganza" : hecha.Categoria == "mandar" ? "dejar un buen legado" : "vivir en paz con los suyos"; break;
             }
             p.Logros++;
             p.Ambiciones.RemoveAll(x => x.Cumplida && p.Ambiciones.IndexOf(x) < p.Ambiciones.Count - 3);   // el historial no crece sin limite

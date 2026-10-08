@@ -255,6 +255,38 @@ namespace Pecera.Core
             return t;
         }
 
+        // ---- persistencia: quien sabe que (con su version distorsionada) ----
+        public IEnumerable<string> Serializa()
+        {
+            var ids = new List<int>(secretos.Keys); ids.Sort();
+            foreach (var id in ids)
+            {
+                var s = secretos[id];
+                var sb = new StringBuilder("{\"k\":\"se\",\"id\":").Append(s.Id).Append(",\"s\":\"").Append(Json.Escape(s.Sujeto)).Append("\",\"tx\":\"").Append(Json.Escape(s.Texto))
+                    .Append("\",\"g\":").Append(Json.Num(s.Gravedad)).Append(",\"sb\":[");
+                var qs = new List<string>(s.Saben.Keys); qs.Sort(StringComparer.Ordinal);
+                for (int i = 0; i < qs.Count; i++)
+                {
+                    var c = s.Saben[qs[i]];
+                    if (i > 0) sb.Append(',');
+                    sb.Append("{\"q\":\"").Append(Json.Escape(qs[i])).Append("\",\"v\":\"").Append(Json.Escape(c.Version)).Append("\",\"f\":").Append(Json.Num(c.Fidelidad))
+                      .Append(",\"fu\":\"").Append(Json.Escape(c.Fuente)).Append("\",\"sa\":").Append(c.Saltos).Append('}');
+                }
+                yield return sb.Append("]}").ToString();
+            }
+        }
+
+        public void Carga(object d)
+        {
+            int id = (int)Json.Num(d, "id", 0); string su = Json.Str(d, "s");
+            if (id <= 0 || su.Length == 0 || secretos.ContainsKey(id) || porSujeto.ContainsKey(su)) return;
+            var s = new Secreto { Id = id, Sujeto = su, Texto = Json.Str(d, "tx"), Gravedad = Math.Max(0, Math.Min(1, Json.Num(d, "g", 0.5))) };
+            var l = Json.Lista(d, "sb");
+            if (l != null) foreach (var o in l) { string q = Json.Str(o, "q"); if (q.Length > 0) s.Saben[q] = new Conocimiento { Version = Json.Str(o, "v"), Fidelidad = Json.Num(o, "f", 1), Fuente = Json.Str(o, "fu"), Saltos = (int)Json.Num(o, "sa", 0) }; }
+            if (!s.Saben.ContainsKey(su)) s.Saben[su] = new Conocimiento { Version = s.Texto, Fidelidad = 1 };
+            secretos[id] = s; porSujeto[su] = id; sig = Math.Max(sig, id + 1);
+        }
+
         // ---- metricas de la red de chismes ----
         public double Alcance(int secretoId)
         {

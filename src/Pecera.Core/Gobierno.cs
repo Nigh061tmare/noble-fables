@@ -100,6 +100,7 @@ namespace Pecera.Core
     {
         readonly ModeloAfectivo afectos;
         public double UmbralAprobacion = 0.45;
+        public Func<string, bool> Favorecido;       // ordenes del jugador: «favorece a X»
 
         public Consejo(ModeloAfectivo afectos) { this.afectos = afectos; }
 
@@ -110,7 +111,8 @@ namespace Pecera.Core
             double meta = metas.Peso(p.Categoria);
             double rencor = afectos.Get(soberano, p.Solicitante).Rencor;
             double deuda = Math.Max(0, afectos.Get(soberano, p.Solicitante).Deuda);         // gratitud
-            double puntos = 0.30 * p.Importancia + 0.25 * estima + 0.30 * meta + 0.15 * deuda - 0.25 * rencor;
+            bool fav = Favorecido != null && Favorecido(p.Solicitante);
+            double puntos = 0.30 * p.Importancia + 0.25 * estima + 0.30 * meta + 0.15 * deuda - 0.25 * rencor + (fav ? 0.15 : 0);
             var v = new Veredicto { Puntuacion = Math.Round(puntos, 4), Aprueba = puntos >= UmbralAprobacion };
             var sb = new StringBuilder();
             sb.Append(v.Aprueba ? "Aprobada" : "Denegada").Append(": importancia ").Append(Json.Num(p.Importancia))
@@ -118,6 +120,7 @@ namespace Pecera.Core
               .Append(", estima ").Append(Json.Num(estima));
             if (rencor > 0.3) sb.Append(", rencor ").Append(Json.Num(rencor));
             if (deuda > 0.1) sb.Append(", gratitud ").Append(Json.Num(deuda));
+            if (fav) sb.Append(", favorecido por el soberano");
             v.Razon = sb.ToString();
             return v;
         }

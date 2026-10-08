@@ -153,7 +153,8 @@ namespace Pecera.Core
         // ("es Orco") pesan poco: son prejuicio, no historia compartida.
         public Par DesdeOpinion(string a, string b, double delta, bool esRasgo)
         {
-            double m = Math.Tanh(Math.Abs(delta) / 2.0);
+            // v0.5: magnitud = percentil del cambio en la partida real (Calibracion). Antes: tanh(|delta|/2).
+            double m = Calibracion.Magnitud(Math.Abs(delta));
             if (esRasgo) m *= 0.25;
             return Evento(a, b, delta < 0 ? TipoEvento.Agravio : TipoEvento.Aprecio, m);
         }

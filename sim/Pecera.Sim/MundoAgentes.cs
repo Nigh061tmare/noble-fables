@@ -81,6 +81,8 @@ namespace Pecera.Sim
         readonly Dictionary<int, Intencion> porEsquema = new Dictionary<int, Intencion>();
         int llamadasHoy, diaLlamadas = -1;
         Director director;
+        MaestroDeJuego maestro;
+        readonly RecuerdosFuertes fuertes = new RecuerdosFuertes();
         Normas normas;
         FrenoConversacion freno;
         readonly Dictionary<string, int> retiroHasta = new Dictionary<string, int>();
@@ -99,6 +101,8 @@ namespace Pecera.Sim
             normas = new Normas();
             freno = new FrenoConversacion { Dias = 2 };
             memoria.UmbralReflexion = 12;
+            maestro = new MaestroDeJuego { Afectos = afectos, Persona = id => personas.Get(id), Nombre = id => nombres.ContainsKey(id) ? nombres[id] : id, Freno = freno, Mem = memoria, Fuertes = fuertes, Secretos = cfg.Rumores ? secretos : null };
+            if (cfg.Vida) IniciaVida();
         }
 
         ContextoMundo Ctx()
@@ -106,7 +110,8 @@ namespace Pecera.Sim
             return new ContextoMundo
             {
                 Afectos = afectos, Vivos = ids, Dia = dia, Metas = metas, Persona = id => personas.Get(id), Nombre = id => nombres.ContainsKey(id) ? nombres[id] : id,
-                UmbralRencorHostil = 0.35 + normas.UmbralHostilExtra, BonoHospitalidad = normas.BonoHospitalidad, PuedeHablar = (a, b) => freno.Puede(a, b, dia)
+                UmbralRencorHostil = 0.35 + normas.UmbralHostilExtra, BonoHospitalidad = normas.BonoHospitalidad, PuedeHablar = (a, b) => freno.Puede(a, b, dia),
+                Exp = cfg.Vida ? maestro.Exp : null, Sesgo = cfg.Vida ? (Func<string, string, double>)((a, b) => prejuicios.Sesgo(a, b)) : null
             };
         }
 
@@ -114,7 +119,7 @@ namespace Pecera.Sim
         {
             var ctx = Ctx();
             // 0) animo y rupturas (RimWorld), reflexion por importancia (Generative Agents) y director de drama
-            var vivos = ids.ToList();
+            var vivos = ids.Where(x => !cfg.Vida || EsAdulto(x)).ToList();      // los menores no planean ni actuan
             AnimoYReflexion(ctx);
             DirectorDia(ctx);
             // 1) reflexion + plan base por reglas (gratis)
@@ -153,10 +158,11 @@ namespace Pecera.Sim
             // 3) ejecucion: la intencion mas prioritaria de cada uno, con una probabilidad
             foreach (var id in vivos)
             {
-                var top = agenda.Top(id, 1);
+                // The Sims: se elige al azar ENTRE las mejores opciones, con mas probabilidad cuanto mejor puntuen (no siempre la mejor).
+                var top = agenda.Top(id, cfg.Vida ? 3 : 1);
                 int hasta; if (retiroHasta.TryGetValue(id, out hasta) && dia <= hasta) continue;          // retirado/hundido: hoy no hace nada
                 if (top.Count == 0 || !rngAg.Chance(0.7)) continue;
-                Ejecuta(personas.Get(id), top[0], ctx);
+                Ejecuta(personas.Get(id), cfg.Vida ? Eleccion.Elige(top, rngAg, 0.12) : top[0], ctx);
             }
 
             // 4) cierre del dia
@@ -167,7 +173,7 @@ namespace Pecera.Sim
                 foreach (var a in Agente.Consolida(p, agenda, 1))
                 {
                     res.AmbicionesCumplidas++;
-                    var sucesora = Agente.Sucesora(p, a, dia);
+                    var sucesora = Agente.Sucesora(p, a, dia, cfg.Vida ? maestro.Exp : null);
                     cronica.Anota(dia, "sueno", nombres[id] + " cumple su ambicion (" + a.Texto + ") y ahora aspira a " + sucesora.Texto, 5);
                     memoria.Registra(id, "logro", "", "cumpli mi ambicion: " + a.Texto, 6);
                 }
@@ -180,6 +186,14 @@ namespace Pecera.Sim
             foreach (var id in ids.ToList())
             {
                 var p = personas.Get(id);
+                if (p == null) continue;
+                if (cfg.Vida)
+                {
+                    string revivido;
+                    var cr = Psique.Dia(p, fuertes, dia, out revivido);
+                    if (revivido.Length > 0) res.RecuerdosRevividos++;
+                    Crisis(p, cr, ctx);
+                }
                 double animo = AnimoCalc.Calcula(p, afectos, ids);
                 animoSuma += animo; animoN++;
                 if (animo < Rupturas.Umbral(p)) bajoUmbralN++;
@@ -207,6 +221,19 @@ namespace Pecera.Sim
                     res.InsightsGenerados += Agente.Insights(p, memoria, ctx).Count;
                 }
             }
+        }
+
+        // Crisis por estres (CK3): la ruptura que elige el caracter. Comparte consecuencias con las del animo.
+        void Crisis(Persona p, Ruptura r, ContextoMundo ctx)
+        {
+            if (r == Ruptura.Ninguna) return;
+            res.CrisisEstres++;
+            if (r == Ruptura.Arrebato) res.CrisisArrebato++; else if (r == Ruptura.Hundimiento) res.CrisisHundimiento++;
+            string texto = Rupturas.Aplica(r, p, ctx, rngAg);
+            if (r == Ruptura.Retiro) retiroHasta[p.Id] = dia;
+            else if (r == Ruptura.Hundimiento) retiroHasta[p.Id] = dia + 1;
+            fuertes.Anota(p.Id, "crisis", texto, -0.6, 6, dia);
+            cronica.Anota(dia, "crisis", texto + " (estres)", r == Ruptura.Retiro ? 2 : 4);
         }
 
         void DirectorDia(ContextoMundo ctx)
@@ -301,6 +328,21 @@ namespace Pecera.Sim
             int antes = tiposVistos.ContainsKey(i.Tipo) ? tiposVistos[i.Tipo] : 0; tiposVistos[i.Tipo] = antes + 1;
             string obj = i.Objetivo;
             bool hecho = true;
+            if (cfg.Vida)
+            {
+                // Maestro de juego comun (el MISMO codigo que en el juego) para lo social; aqui solo queda lo que el juego tendria que ejecutar.
+                var rs = maestro.Resuelve(i, dia, rngAg, ids);
+                if (rs.Resuelta)
+                {
+                    res.Conversaciones += rs.Conversacion != null ? 1 : 0; if (rs.Conversacion != null && rs.Conversacion.Exito) res.ConversacionesExito++;
+                    if (rs.Conversacion != null && presupuesto.Pide(PrioridadLlm.Conversacion)) { Cuenta(); res.ConversacionesLlm++; }
+                    if (i.Tipo == TipoIntencion.Celebrar) cultura.Suceso("comunidad", 0.3);
+                    Crisis(p, rs.Crisis, ctx);
+                    agenda.Marca(i, rs.Exito ? EstadoIntencion.Hecha : EstadoIntencion.Fallida);
+                    if (rs.Exito) res.IntencionesHechas++; else res.IntencionesFallidas++;
+                    return;
+                }
+            }
             switch (i.Tipo)
             {
                 case TipoIntencion.Charlar: { obj = Otro(p.Id, obj); if (obj.Length == 0 || !freno.Puede(p.Id, obj, dia)) { hecho = false; break; } var b = personas.Get(obj); Habla(p, b, Dialogo.Elige(p, b, afectos, rngAg)); break; }
@@ -324,8 +366,13 @@ namespace Pecera.Sim
                 case TipoIntencion.Vengarse:
                 {
                     if (!cfg.Esquemas) { hecho = false; break; }          // esquemas apagados: la intencion falla, no se cuela por otra puerta
-                    var pr = new PropuestaEsquema { Ejecutor = p.Id, Objetivo = obj, Tipo = i.Tipo == TipoIntencion.Vengarse ? "Difamar" : "Desairar", Talante = Talante.Hostil, Razon = i.Razon, Intencion = i.Id };
+                    string tipoEsq = i.Tipo == TipoIntencion.Vengarse ? "Difamar" : "Desairar";
+                    // Lo que el jugador veta casi siempre deja de proponerse: el agente busca otra forma (o desiste).
+                    if (cfg.Vida && prefs.Silenciada("esquema", tipoEsq)) tipoEsq = tipoEsq == "Difamar" ? "Desairar" : "Difamar";
+                    if (cfg.Vida && prefs.Silenciada("esquema", tipoEsq)) { hecho = false; res.SilenciadasPorPreferencia++; break; }
+                    var pr = new PropuestaEsquema { Ejecutor = p.Id, Objetivo = obj, Tipo = tipoEsq, Talante = Talante.Hostil, Razon = i.Razon, Intencion = i.Id };
                     var d = compuerta.Propone("esquema", p.Id + ">" + obj, pr.Tipo, pr.Razon, pr, false);
+                    if (d != null) d.Etiqueta = pr.Tipo;
                     if (d == null) { hecho = false; break; }
                     res.EsquemasPropuestos++;
                     agenda.Marca(i, EstadoIntencion.EnCurso); porEsquema[i.Id] = i;
@@ -335,6 +382,7 @@ namespace Pecera.Sim
             agenda.Marca(i, hecho ? EstadoIntencion.Hecha : EstadoIntencion.Fallida);
             if (hecho) res.IntencionesHechas++; else res.IntencionesFallidas++;
             if (i.Hostil) hostilesMes++;
+            if (cfg.Vida) Crisis(p, maestro.Cierra(i, hecho), ctx);
         }
 
         void CierraIntencionDeEsquema(PropuestaEsquema pr)
@@ -343,6 +391,7 @@ namespace Pecera.Sim
             if (pr.Intencion == 0 || !porEsquema.TryGetValue(pr.Intencion, out i)) return;
             porEsquema.Remove(pr.Intencion);
             agenda.Marca(i, EstadoIntencion.Hecha); res.IntencionesHechas++;
+            if (cfg.Vida) { var p = personas.Get(i.Pawn); if (p != null) Crisis(p, maestro.Cierra(i, true), Ctx()); }
         }
 
         void CierraAgentes()

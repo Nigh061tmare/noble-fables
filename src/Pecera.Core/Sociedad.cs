@@ -175,6 +175,27 @@ namespace Pecera.Core
         }
 
         public IEnumerable<string> Tradiciones { get { return tradiciones; } }
+
+        public IEnumerable<string> Serializa()
+        {
+            var ks = new List<string>(vistas.Keys); ks.Sort(StringComparer.Ordinal);
+            foreach (var k in ks)
+            {
+                var anios = new List<int>(vistas[k]); anios.Sort();
+                var sb = new StringBuilder("{\"k\":\"co\",\"s\":\"").Append(Json.Escape(k)).Append("\",\"tr\":").Append(tradiciones.Contains(k) ? "true" : "false").Append(",\"a\":[");
+                for (int i = 0; i < anios.Count; i++) { if (i > 0) sb.Append(','); sb.Append(anios[i]); }
+                yield return sb.Append("]}").ToString();
+            }
+        }
+
+        public void Carga(object d)
+        {
+            string k = Json.Str(d, "s"); if (k.Length == 0) return;
+            var hs = new HashSet<int>(); var l = Json.Lista(d, "a");
+            if (l != null) foreach (var o in l) if (o is double) hs.Add((int)(double)o);
+            vistas[k] = hs;
+            if (Json.Str(d, "tr") == "true") tradiciones.Add(k);
+        }
     }
 
     // Deriva de personalidad: las experiencias duras endurecen (rencor del temperamento

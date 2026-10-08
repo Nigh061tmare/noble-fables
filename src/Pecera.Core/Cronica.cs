@@ -35,6 +35,13 @@ namespace Pecera.Core
             }
         }
 
+        public IEnumerable<string> Serializa()
+        {
+            foreach (var h in hitos) yield return "{\"k\":\"cr\",\"d\":" + h.Dia + ",\"t\":\"" + Json.Escape(h.Tipo) + "\",\"tx\":\"" + Json.Escape(h.Texto) + "\",\"w\":" + Json.Num(h.Peso) + "}";
+        }
+
+        public void Carga(object d) { hitos.Add(new Hito { Dia = (int)Json.Num(d, "d", 0), Tipo = Json.Str(d, "t"), Texto = Json.Str(d, "tx"), Peso = Json.Num(d, "w", 1) }); }
+
         public int Temporada(int dia) { return dia / DiasPorTemporada; }
         public int Anio(int dia) { return dia / (DiasPorTemporada * TemporadasPorAnio); }
         static readonly string[] Nombres = { "primavera", "verano", "otono", "invierno" };

@@ -67,6 +67,24 @@ namespace Pecera.Core
             return map[dom] + mito;
         }
 
+        public IEnumerable<string> Serializa()
+        {
+            var sb = new StringBuilder("{\"k\":\"cu\"");
+            foreach (var n in Valores.Nombres) { double v; contadores.TryGetValue(n, out v); sb.Append(",\"").Append(n).Append("\":").Append(Json.Num(v)); }
+            yield return sb.Append('}').ToString();
+            var ks = new List<string>(fe.Keys); ks.Sort(StringComparer.Ordinal);
+            foreach (var k in ks) yield return "{\"k\":\"cf\",\"id\":\"" + Json.Escape(k) + "\",\"v\":" + Json.Num(fe[k]) + "}";
+            foreach (var h in mitos) yield return "{\"k\":\"cm\",\"d\":" + h.Dia + ",\"t\":\"" + Json.Escape(h.Tipo) + "\",\"tx\":\"" + Json.Escape(h.Texto) + "\",\"w\":" + Json.Num(h.Peso) + "}";
+        }
+
+        public void Carga(object d)
+        {
+            string k = Json.Str(d, "k");
+            if (k == "cu") foreach (var n in Valores.Nombres) contadores[n] = Math.Max(0, Json.Num(d, n, 0));
+            else if (k == "cf") fe[Json.Str(d, "id")] = Math.Max(0, Math.Min(1, Json.Num(d, "v", 0.3)));
+            else if (k == "cm") mitos.Add(new Hito { Dia = (int)Json.Num(d, "d", 0), Tipo = Json.Str(d, "t"), Texto = Json.Str(d, "tx"), Peso = Json.Num(d, "w", 1) });
+        }
+
         public double Fe(string id) { double v; return fe.TryGetValue(id, out v) ? v : 0.3; }
 
         public void ActualizaFe(string id, double fiestas, double traumaSuperado, double soledad)

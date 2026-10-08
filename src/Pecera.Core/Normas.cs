@@ -17,6 +17,7 @@ namespace Pecera.Core
     //   paz_publica : las intrigas exigen mas rencor (+0.20) y se enfrian el doble.
     //   ojo_por_ojo : las intrigas exigen menos rencor (-0.10) y se enfrian a la mitad. Incompatible con paz_publica.
     //   hospitalidad: celebrar y consolar pesan mas (+0.10 de prioridad).
+    //   tolerancia  : el prejuicio de grupo pesa la mitad (se propone cuando el reino esta crispado por razas/alineamientos).
     public sealed class Normas
     {
         public const double Aprobar = 0.55, Derogar = 0.40, Margen = 0.10;
@@ -28,9 +29,13 @@ namespace Pecera.Core
         public double UmbralHostilExtra { get { return Tiene("paz_publica") ? 0.20 : Tiene("ojo_por_ojo") ? -0.10 : 0; } }
         public double FactorEnfriaHostil { get { return Tiene("paz_publica") ? 2.0 : Tiene("ojo_por_ojo") ? 0.5 : 1.0; } }
         public double BonoHospitalidad { get { return Tiene("hospitalidad") ? 0.10 : 0; } }
+        public double AtenuacionPrejuicio { get { return Tiene("tolerancia") ? 0.5 : 1.0; } }
 
         // peso: influencia de cada pawn en la votacion (1 = ciudadano; lideres de faccion 3).
-        public List<string> Evalua(int dia, Cultura cultura, IList<Persona> ps, Func<string, double> peso, int intrigasRecientes)
+        public List<string> Evalua(int dia, Cultura cultura, IList<Persona> ps, Func<string, double> peso, int intrigasRecientes) { return Evalua(dia, cultura, ps, peso, intrigasRecientes, 0); }
+
+        // hostilidadGrupal: media del prejuicio negativo del reino (Prejuicios.Hostilidad), 0..1.
+        public List<string> Evalua(int dia, Cultura cultura, IList<Persona> ps, Func<string, double> peso, int intrigasRecientes, double hostilidadGrupal)
         {
             var cambios = new List<string>();
             double paz = Apoyo(ps, peso, p => p.Amabilidad), ojo = Apoyo(ps, peso, p => 1 - p.Amabilidad), hosp = Apoyo(ps, peso, p => p.Extroversion);
@@ -43,12 +48,17 @@ namespace Pecera.Core
             Decide("paz_publica", "Se declara la Paz Publica: quien intrigue tendra que justificarlo.", paz, dia, cambios, !(ojo > paz + Margen), dom);
             Decide("ojo_por_ojo", "Se acepta el Ojo por Ojo: las afrentas se pagan.", ojo, dia, cambios, !(paz > ojo + Margen), dom);
             Decide("hospitalidad", "Se proclama la Hospitalidad: toda mesa tiene un sitio mas.", hosp, dia, cambios, true, dom);
+            // La tolerancia solo se plantea si hay crispacion entre grupos; la apoyan los amables y abiertos.
+            double tol = Apoyo(ps, peso, p => 0.5 * p.Amabilidad + 0.5 * p.Apertura) + 0.1 * rep["comunidad"] + (hostilidadGrupal > 0.25 ? 0.1 : -0.2);
+            Decide("tolerancia", "Se proclama la Tolerancia: nadie sera juzgado por su sangre.", tol, dia, cambios, true, dom);
             return cambios;
         }
 
         void Decide(string id, string texto, double apoyo, int dia, List<string> cambios, bool permitida, string dom)
         {
             Norma n = activas.Find(x => x.Id == id);
+            if (n != null && id == Forzada) return;                        // lo ordenado por el jugador no se vota
+            if (n == null && Forzada != null && ((id == "paz_publica" && Forzada == "ojo_por_ojo") || (id == "ojo_por_ojo" && Forzada == "paz_publica"))) return;
             if (n != null)
             {
                 n.Apoyo = apoyo;
@@ -64,6 +74,33 @@ namespace Pecera.Core
                 activas.Add(new Norma { Id = id, Texto = texto, Desde = dia, Apoyo = apoyo });
                 cambios.Add(texto);
             }
+        }
+
+        // Una orden del jugador fuerza una norma (y desactiva su contraria) mientras siga escrita en directriz.txt.
+        public string Forzada;
+        public void Fuerza(string id, int dia, List<string> cambios)
+        {
+            if (id == Forzada) return;
+            Forzada = id;
+            if (id == null) return;
+            string contraria = id == "paz_publica" ? "ojo_por_ojo" : id == "ojo_por_ojo" ? "paz_publica" : null;
+            if (contraria != null && activas.RemoveAll(x => x.Id == contraria) > 0) cambios.Add("Por orden del soberano se deroga " + contraria + ".");
+            if (!Tiene(id))
+            {
+                activas.Add(new Norma { Id = id, Texto = "Por orden del soberano: " + id, Desde = dia, Apoyo = 1 });
+                cambios.Add("Por orden del soberano se impone " + id + ".");
+            }
+        }
+
+        public IEnumerable<string> Serializa()
+        {
+            foreach (var n in activas) yield return "{\"k\":\"no\",\"id\":\"" + Json.Escape(n.Id) + "\",\"tx\":\"" + Json.Escape(n.Texto) + "\",\"d\":" + n.Desde + ",\"ap\":" + Json.Num(n.Apoyo) + "}";
+        }
+
+        public void Carga(object d)
+        {
+            string id = Json.Str(d, "id");
+            if (id.Length > 0 && !Tiene(id)) activas.Add(new Norma { Id = id, Texto = Json.Str(d, "tx"), Desde = (int)Json.Num(d, "d", 0), Apoyo = Json.Num(d, "ap", 0.5) });
         }
 
         static double Apoyo(IList<Persona> ps, Func<string, double> peso, Func<Persona, double> f)

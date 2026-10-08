@@ -13,6 +13,7 @@ namespace Pecera.Sim
         public bool Gobierno = true, Esquemas = true, Rumores = true, Afectos = true;
         public EstiloDirector EstiloDirector = EstiloDirector.Clasico;
         public bool Agentes = true;             // agentes con proposito (requiere Ideas): persona, agenda, plan en lote, conversaciones, narrativa
+        public bool Vida = true;                // v0.5: psique (CK3/DF), maestro de juego, eleccion Sims, poblacion viva, prejuicios calibrados, jugador con gustos, ordenes
         public int LlamadasLlmDia = 12, LoteAgentes = 6;    // 12/dia: una llamada cada ~10 s de reloj con dia_segundos=120 (la voz ya usa 1 cada 25 s)
         public bool Ideas = true;               // justicia, sucesion, mentoria, cultura, dialectos, estaciones, suenos, espionaje, deriva
         public double UmbralAprobacion = 0.45;
@@ -174,6 +175,7 @@ namespace Pecera.Sim
             {
                 reloj.Ticks += compuerta.DiaTicks;
                 if (cfg.Ideas) IdeasDiarias();
+                if (cfg.Ideas && cfg.Agentes && cfg.Vida) VidaDia();
                 if (cfg.Ideas && cfg.Agentes) AgentesDia();
                 VidaSocial();
                 if (cfg.Afectos) afectos.Avanza(1);
@@ -193,8 +195,9 @@ namespace Pecera.Sim
         void VidaSocial()
         {
             ModEstacion est = cfg.Ideas ? Estaciones.De(dia, cronica.DiasPorTemporada) : new ModEstacion { Nombre = "neutra" };
-            foreach (var a in ids)
+            foreach (var a in ids.ToList())
             {
+                if (cfg.Agentes && cfg.Vida && !EsAdulto(a)) continue;
                 if (!rng.Chance(0.5 * Math.Min(1, est.Sociabilidad))) continue;
                 string b = ids[rng.Next(ids.Count)];
                 if (a == b) continue;
@@ -293,7 +296,11 @@ namespace Pecera.Sim
 
         void EjecutaDecisiones()
         {
-            foreach (var d in compuerta.Pendientes()) if (rng.Chance(cfg.ProbVeto / 10.0 * 3)) { if (compuerta.Veta(d.Id)) res.Vetadas++; }
+            foreach (var d in compuerta.Pendientes())
+            {
+                double pv = cfg.Ideas && cfg.Agentes && cfg.Vida ? ProbVetoJugador(d) : cfg.ProbVeto / 10.0 * 3;
+                if (rng.Chance(pv)) { if (compuerta.Veta(d.Id)) res.Vetadas++; }
+            }
             reloj.AdvanceSeconds(31);
             foreach (var d in compuerta.Listas())
             {
@@ -307,6 +314,8 @@ namespace Pecera.Sim
 
         void Aplica(Peticion p)
         {
+            if (res.Favorecido.Length > 0 && nombres.ContainsKey(p.Solicitante) && nombres[p.Solicitante] == res.Favorecido) res.AprobadasFavorecidoDespues++;
+            else if (cfg.Agentes && cfg.Vida && ordenes == null && p.Solicitante == FavorecidoPrevisto()) res.AprobadasFavorecidoAntes++;
             double e = 0.04;
             if (p.Tipo == "obra") { riqueza = Math.Min(1, riqueza + e); res.Obras++; }
             else if (p.Tipo == "defensa") { seguridad = Math.Min(1, seguridad + e); res.Obras++; }
@@ -342,6 +351,7 @@ namespace Pecera.Sim
             {
                 sucesionHecha = true;
                 string viejo = soberano;
+                if (cfg.Agentes && cfg.Vida) MuerePawn(viejo, "", "de vejez");      // duelo, recuerdos y cronica via el bus
                 linaje.Muere(viejo); muertos.Add(viejo); ids.Remove(viejo);
                 var r = Sucesion.Elige(viejo, linaje, ids, afectos, id => fichas.Get(id), 0.03);
                 if (r.Sucesor.Length > 0) soberano = r.Sucesor;
@@ -359,7 +369,8 @@ namespace Pecera.Sim
                 if (ac == null || muertos.Contains(ac.Acusado) || muertos.Contains(ac.Acusador) || !rng.Chance(0.4)) continue;
                 var sen = tribunal.Juzga(ac, soberano, false);
                 res.Juicios++;
-                compuerta.Propone("juicio", ac.Acusador + ">" + ac.Acusado, "juicio por " + ac.Delito, sen.Razon, sen, false);
+                var dj = compuerta.Propone("juicio", ac.Acusador + ">" + ac.Acusado, "juicio por " + ac.Delito, sen.Razon, sen, false);
+                if (dj != null) dj.Etiqueta = sen.Pena.ToString();
             }
             // Mentoria: avanzan los lazos activos.
             foreach (var l in mentoria.Lazos)
@@ -424,8 +435,10 @@ namespace Pecera.Sim
         {
             foreach (var pr in motor.Propone(afectos, catalogo))
             {
+                if (cfg.Ideas && cfg.Agentes && cfg.Vida && prefs.Silenciada("esquema", pr.Tipo)) { res.SilenciadasPorPreferencia++; continue; }
                 res.EsquemasPropuestos++;
-                compuerta.Propone("esquema", pr.Ejecutor + ">" + pr.Objetivo, pr.Tipo, pr.Razon, pr, false);
+                var dd = compuerta.Propone("esquema", pr.Ejecutor + ">" + pr.Objetivo, pr.Tipo, pr.Razon, pr, false);
+                if (dd != null) dd.Etiqueta = pr.Tipo;
             }
         }
 
@@ -527,6 +540,7 @@ namespace Pecera.Sim
             Sociedad.AsignaLideres(afectos, fs, id => fichas.Get(id), id => nombres[id]);
             res.FaccionesFinales = fs.Count;
             foreach (var f in fs) cronica.Anota(cfg.Dias - 1, "faccion", f.Nombre + " reune a " + f.Miembros.Count + " personas", 5);
+            if (cfg.Ideas && cfg.Agentes && cfg.Vida) CierraVida();
             if (cfg.Ideas && cfg.Agentes) CierraAgentes();
             res.CronicaMd = cronica.ToMarkdown("Reino simulado") + (res.HistoriasMd.Length > 0 ? "\n" + res.HistoriasMd : "");
             res.GrafoDot = Informe.GrafoDot(afectos, ids, id => nombres[id], 0.35);
@@ -567,6 +581,7 @@ namespace Pecera.Sim
                 Fila(sb, "Giros de dialecto (total) / deriva maxima de temperamento", res.GirosDialecto + " / " + Json.Num(res.DerivaMax));
             }
             if (cfg.Ideas && cfg.Agentes) FilasAgentes(sb);
+            if (cfg.Ideas && cfg.Agentes && cfg.Vida) FilasVida(sb);
             sb.Append("\n## Metricas finales\n\n```\n").Append(f0.ToJson()).Append("\n```\n");
             res.Informe = sb.ToString();
         }

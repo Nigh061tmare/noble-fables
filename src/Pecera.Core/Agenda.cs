@@ -136,6 +136,52 @@ namespace Pecera.Core
             return n;
         }
 
+        // ---- persistencia: intenciones vivas, contadores, enfriamientos e historial por pawn ----
+        public IEnumerable<string> Serializa()
+        {
+            yield return "{\"k\":\"agc\",\"h\":" + Hechas + ",\"f\":" + Fallidas + ",\"s\":" + sig + ",\"hoy\":" + Hoy + "}";
+            var pawns = new List<string>(por.Keys); pawns.Sort(StringComparer.Ordinal);
+            foreach (var pw in pawns)
+                foreach (var i in por[pw])
+                {
+                    if (i.Estado > EstadoIntencion.EnCurso) continue;
+                    yield return "{\"k\":\"ag\",\"id\":" + i.Id + ",\"p\":\"" + Json.Escape(i.Pawn) + "\",\"t\":" + (int)i.Tipo + ",\"o\":\"" + Json.Escape(i.Objetivo) + "\",\"c\":\"" + Json.Escape(i.Categoria)
+                        + "\",\"tx\":\"" + Json.Escape(i.Texto) + "\",\"pr\":" + Json.Num(i.Prioridad) + ",\"cr\":" + i.Creada + ",\"v\":" + i.Vence + ",\"e\":" + (int)i.Estado
+                        + ",\"r\":\"" + Json.Escape(i.Razon) + "\",\"or\":\"" + Json.Escape(i.Origen) + "\"}";
+                }
+            var ks = new List<string>(cerradas.Keys); ks.Sort(StringComparer.Ordinal);
+            foreach (var k in ks) yield return "{\"k\":\"agx\",\"c\":\"" + Json.Escape(k) + "\",\"h\":" + cerradas[k] + "}";
+            foreach (var pw in new List<string>(HechasPorPawn.Keys))
+                foreach (var kv in HechasPorPawn[pw]) yield return "{\"k\":\"agh\",\"p\":\"" + Json.Escape(pw) + "\",\"t\":" + (int)kv.Key + ",\"n\":" + kv.Value + "}";
+        }
+
+        public void Carga(object d)
+        {
+            string k = Json.Str(d, "k");
+            if (k == "agc") { Hechas = (int)Json.Num(d, "h", 0); Fallidas = (int)Json.Num(d, "f", 0); sig = Math.Max(sig, (int)Json.Num(d, "s", 1)); Hoy = (int)Json.Num(d, "hoy", 0); }
+            else if (k == "agx") cerradas[Json.Str(d, "c")] = (int)Json.Num(d, "h", 0);
+            else if (k == "agh")
+            {
+                int t = (int)Json.Num(d, "t", -1); if (t < 0 || t > (int)TipoIntencion.Celebrar) return;
+                Dictionary<TipoIntencion, int> m; string pw = Json.Str(d, "p");
+                if (!HechasPorPawn.TryGetValue(pw, out m)) { m = new Dictionary<TipoIntencion, int>(); HechasPorPawn[pw] = m; }
+                m[(TipoIntencion)t] = (int)Json.Num(d, "n", 0);
+            }
+            else if (k == "ag")
+            {
+                int t = (int)Json.Num(d, "t", -1); if (t < 0 || t > (int)TipoIntencion.Celebrar) return;
+                var i = new Intencion
+                {
+                    Id = (int)Json.Num(d, "id", 0), Pawn = Json.Str(d, "p"), Tipo = (TipoIntencion)t, Objetivo = Json.Str(d, "o"), Categoria = Json.Str(d, "c"), Texto = Json.Str(d, "tx"),
+                    Prioridad = Json.Num(d, "pr", 0.5), Creada = (int)Json.Num(d, "cr", 0), Vence = (int)Json.Num(d, "v", 0), Estado = (EstadoIntencion)Math.Max(0, Math.Min(1, (int)Json.Num(d, "e", 0))),
+                    Razon = Json.Str(d, "r"), Origen = Json.Str(d, "or")
+                };
+                if (i.Pawn.Length == 0) return;
+                List<Intencion> l; if (!por.TryGetValue(i.Pawn, out l)) { l = new List<Intencion>(); por[i.Pawn] = l; }
+                l.Add(i); sig = Math.Max(sig, i.Id + 1);
+            }
+        }
+
         public Dictionary<TipoIntencion, int> PorTipo()
         {
             var d = new Dictionary<TipoIntencion, int>();
