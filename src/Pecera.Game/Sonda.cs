@@ -19,7 +19,7 @@ namespace PeceraNF
             {
                 var sb = new StringBuilder("{\"pawn\":[");
                 Miembros(sb, p, p.GetType());
-                sb.Append("],\"character\":[");
+                sb.Append("],\"candidatos_id\":\"").Append(Json.Escape(Identidad.Candidatos)).Append("\",\"colisiones_id\":").Append(Identidad.Colisiones).Append(",\"character\":[");
                 var pr = typeof(Pawn).GetProperty("character", Aux.Todos);
                 object ch = pr != null ? pr.GetValue(p, null) : null;
                 if (ch != null) Miembros(sb, ch, ch.GetType());
@@ -55,6 +55,84 @@ namespace PeceraNF
                       .Append("\",\"valor\":").Append(valor == null ? "null" : "\"" + Json.Escape(valor.Length > 60 ? valor.Substring(0, 60) : valor) + "\"").Append('}');
                 }
             }
+        }
+
+        // F11 (segunda parte): estado ESCALAR de los managers que importan (reloj, reino, soberano, investigacion, planes...)
+        // y firmas de los metodos de Pawn relacionados con necesidades, familia, habilidades y titulos. Solo lectura.
+        static readonly string[] InteresMundo = { "Time", "Calendar", "Season", "Kingdom", "Ruler", "Research", "PlanManager", "Mission", "Scheme", "Want", "Need", "Family", "Marriage", "Relationship", "Title", "Faction", "Trade", "Diplo", "Stockpile", "Skill", "Job" };
+
+        public static void Mundo()
+        {
+            try
+            {
+                var sb = new StringBuilder("{\"managers\":[");
+                bool primero = true;
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (!asm.GetName().Name.StartsWith("Assembly-CSharp", StringComparison.Ordinal)) continue;
+                    Type[] ts;
+                    try { ts = asm.GetTypes(); }
+                    catch (ReflectionTypeLoadException e) { ts = Array.FindAll(e.Types, x => x != null); }
+                    foreach (var t in ts)
+                    {
+                        if (!t.Name.EndsWith("Manager", StringComparison.Ordinal) || t.IsAbstract || t.IsGenericTypeDefinition) continue;
+                        bool vale = false; foreach (var k in InteresMundo) if (t.Name.IndexOf(k, StringComparison.Ordinal) >= 0) { vale = true; break; }
+                        if (!vale) continue;
+                        object inst = null;
+                        try { var pi = t.GetProperty("Instance", Aux.Todos | BindingFlags.FlattenHierarchy); if (pi != null) inst = pi.GetValue(null, null); }
+                        catch (TargetInvocationException) { }
+                        if (!primero) sb.Append(','); primero = false;
+                        sb.Append("{\"tipo\":\"").Append(Json.Escape(t.FullName)).Append("\",\"instancia\":").Append(inst != null ? "true" : "false").Append(",\"estado\":[");
+                        bool pe = true;
+                        if (inst != null)
+                            foreach (var m in t.GetMembers(Aux.Todos | BindingFlags.DeclaredOnly))
+                            {
+                                var f = m as FieldInfo; var pr = m as PropertyInfo;
+                                if (f == null && pr == null) continue;
+                                if (pr != null && (pr.GetIndexParameters().Length > 0 || !pr.CanRead)) continue;
+                                Type tt = f != null ? f.FieldType : pr.PropertyType;
+                                string valor = null;
+                                try
+                                {
+                                    object v = f != null ? f.GetValue(inst) : pr.GetValue(inst, null);
+                                    if (v == null) valor = "null";
+                                    else if (tt.IsPrimitive || tt == typeof(string) || tt.IsEnum) valor = v.ToString();
+                                    else { var col = v as System.Collections.ICollection; valor = col != null ? tt.Name + " count=" + col.Count : tt.Name; }
+                                }
+                                catch (TargetInvocationException) { valor = "(lanza)"; }
+                                if (!pe) sb.Append(','); pe = false;
+                                sb.Append("{\"n\":\"").Append(Json.Escape(m.Name)).Append("\",\"v\":\"").Append(Json.Escape(valor.Length > 80 ? valor.Substring(0, 80) : valor)).Append("\"}");
+                            }
+                        sb.Append("],\"metodos\":[");
+                        bool pm = true; int cuantos = 0;
+                        foreach (var m in t.GetMembers(Aux.Todos | BindingFlags.DeclaredOnly))
+                        {
+                            if (m is FieldInfo || m is PropertyInfo || cuantos >= 60) continue;
+                            string d = Describe(m); if (d == null) continue;
+                            if (!pm) sb.Append(','); pm = false; cuantos++;
+                            sb.Append('"').Append(Json.Escape(d)).Append('"');
+                        }
+                        sb.Append("]}");
+                    }
+                }
+                sb.Append("],\"pawn_metodos\":[");
+                bool pp = true;
+                string[] clave = { "Need", "Want", "Skill", "Family", "Spouse", "Marri", "Relat", "Title", "Job", "Task", "Age", "Birth", "Gender", "Kin", "Faction", "Mood", "Trait" };
+                foreach (var m in typeof(Pawn).GetMembers(Aux.Todos))
+                {
+                    bool ok = false; foreach (var k in clave) if (m.Name.IndexOf(k, StringComparison.Ordinal) >= 0) { ok = true; break; }
+                    if (!ok) continue;
+                    string d = Describe(m); if (d == null) { var f = m as FieldInfo; if (f != null) d = "campo " + f.FieldType.Name + " " + f.Name; }
+                    if (d == null) continue;
+                    if (!pp) sb.Append(','); pp = false;
+                    sb.Append('"').Append(Json.Escape(d)).Append('"');
+                }
+                sb.Append("]}");
+                Estado.Disco.Rewrite("sonda_mundo.json", new[] { sb.ToString() });
+                UnityEngine.Debug.Log("[Pecera] sonda mundo: ver sonda_mundo.json");
+            }
+            catch (ReflectionTypeLoadException e) { UnityEngine.Debug.Log("[Pecera] sonda mundo fallo: " + e.Message); }
+            catch (ArgumentException e) { UnityEngine.Debug.Log("[Pecera] sonda mundo fallo: " + e.Message); }
         }
 
         static readonly string[] Interes = { "Scheme", "Petition", "Research", "PlanManager", "Mission", "Conversation", "Wants", "Kingdom", "Season", "Calendar", "GameTime", "TimeManager" };

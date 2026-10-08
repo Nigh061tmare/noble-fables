@@ -17,7 +17,7 @@ namespace PeceraNF
     {
         Harmony _h;
         bool _panel;
-        float _tFps, _fps1, _t1, _t5, _t30;
+        float _tFps, _fps1, _t1, _t5, _t30, _tMente;
         static long _ultimoInforme;
         bool _fpsHeader;
         float _diaPendiente;
@@ -91,7 +91,7 @@ namespace PeceraNF
             if (!Estado.Activo) return;
 
             float dt = Time.unscaledDeltaTime;
-            _t1 += dt; _t5 += dt; _t30 += dt;
+            _t1 += dt; _t5 += dt; _t30 += dt; _tMente += dt;
             if (_t1 >= 1f)
             {
                 _diaPendiente += _t1 / (float)Math.Max(10, Estado.Cfg.Num("dia_segundos"));
@@ -101,6 +101,7 @@ namespace PeceraNF
                 _t1 = 0f;
                 SondeaIds();
             }
+            if (_tMente >= (float)Math.Max(30, Estado.Cfg.Num("dia_segundos"))) { _tMente = 0f; Mente.Tick(); }
             if (_t5 >= 5f) { _t5 = 0f; Estado.CargaDirectriz(); Consola.Atiende(); }
             if (_t30 >= 30f)
             {
@@ -164,6 +165,7 @@ namespace PeceraNF
                 if (!Estado.EscrituraSegura) avisos.Add("escrituras bloqueadas: version del juego sin confirmar");
                 foreach (var f in fs) avisos.Add(f.Nombre + ": " + f.Miembros.Count + " miembros, cohesion " + Json.Num(f.Cohesion) + (Estado.Dialectos[f.Nombre].Count > 0 ? " (" + Estado.Dialectos[f.Nombre].Pista() + ")" : ""));
                 foreach (var h in Estado.Cronica.Hitos) Estado.Cultura.Observa(h);
+                Estado.Metas.Ajusta(m);
                 avisos.Add("Credo emergente: " + Estado.Cultura.Credo());
                 string ev = Estado.Ev.ToJson(Estado.VERSION, Extra());
                 Estado.Disco.Rewrite("verificacion.json", new[] { ev });
@@ -171,6 +173,14 @@ namespace PeceraNF
                 Estado.Disco.Rewrite("grafo.dot", new[] { Informe.GrafoDot(Estado.Afectos, ids, id => Estado.Ids.Nombre(id), 0.3) });
                 Estado.Disco.Rewrite("grafo.json", new[] { Informe.GrafoJson(Estado.Afectos, ids, id => Estado.Ids.Nombre(id), 0.3) });
                 if (Estado.Cfg.Bool("cronica")) Estado.Disco.Rewrite("cronica.md", new[] { Estado.Cronica.ToMarkdown("el reino") });
+                if (Estado.Cfg.Bool("agentes")) Estado.Disco.Rewrite("agentes.md", new[] { Mente.InformeMd() });
+                if (Estado.Cfg.Bool("cronica"))
+                {
+                    var hs = new List<Historia>();
+                    int maxT = 0; foreach (var h in Estado.Cronica.Hitos) if (Estado.Cronica.Temporada(h.Dia) > maxT) maxT = Estado.Cronica.Temporada(h.Dia);
+                    for (int t = maxT; t >= 0 && t > maxT - 4; t--) hs.AddRange(Narrador.DeTemporada(Estado.Cronica, t, 3));
+                    Estado.Disco.Rewrite("historias.md", new[] { Narrador.Markdown(hs, "el reino") });
+                }
                 _ultimoInforme = Estado.Reloj.NowTicks;
                 Estado.Ev.Ok("informe_escrito", motivo);
             }

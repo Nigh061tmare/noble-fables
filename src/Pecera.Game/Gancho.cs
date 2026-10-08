@@ -35,6 +35,10 @@ namespace PeceraNF
 
         public static int LlamadasTotal { get { return Llamadas; } }
 
+        // Para que otros modulos (Mente) usen LA MISMA hebra de LLM: nunca dos llamadas en vuelo.
+        public static bool ColaHolgada { get { return Cola.Count < 2; } }
+        public static bool EncolaLlm(Action a) { return EncolaBruto(a); }
+
         [HarmonyPatch(typeof(PawnManager), "OpinionDelta")]
         static class AlCambiarLaOpinion
         {
@@ -88,6 +92,8 @@ namespace PeceraNF
             if (!rasgo && delta > 0) Estado.Cultura.Suceso("comunidad", 0.1);      // trato bueno por un hecho
 
             // Modelo afectivo, memoria y rumores (solo memoria interna: no escriben en el juego).
+            if (pawn != null) Mente.Recuerda(ida, pawn);
+            Mente.Observa(ida, idb, delta);
             if (Estado.Cfg.Bool("afectos"))
             {
                 Estado.Afectos.DesdeOpinion(ida, idb, delta, rasgo);
@@ -231,6 +237,12 @@ namespace PeceraNF
 
         static void Encola(Action a)
         {
+            // Cola acotada: si estuviera llena se libera el cupo de voz y se pierde la frase.
+            if (!EncolaBruto(a)) Estado.Voz.Release();
+        }
+
+        static bool EncolaBruto(Action a)
+        {
             lock (typeof(Gancho))
             {
                 if (!HiloArrancado)
@@ -241,8 +253,7 @@ namespace PeceraNF
                     t.Start();
                 }
             }
-            // Cola acotada: si estuviera llena se libera el cupo de voz y se pierde la frase.
-            if (!Cola.TryAdd(a)) Estado.Voz.Release();
+            return Cola.TryAdd(a);
         }
 
         static void Trabajador()

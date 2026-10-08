@@ -201,6 +201,19 @@ namespace Pecera.Tests
         }
 
         [Fact]
+        public void Con_vivos_ya_ordenados_el_plan_es_identico_y_no_ordena_de_nuevo()
+        {
+            var m = new ModeloAfectivo(null);
+            var ps = Enumerable.Range(0, 12).Select(i => Mundito.P("p" + (11 - i), Mundito.A("casarse"), Mundito.A("vengar"))).ToArray();    // ids desordenados a proposito
+            m.Evento("p3", "p7", TipoEvento.Traicion, 1); m.Evento("p3", "p4", TipoEvento.Aprecio, 1);
+            var libre = Mundito.Ctx(m, 9, ps);
+            var ordenado = Mundito.Ctx(m, 9, ps); ordenado.Vivos = ordenado.Vivos.OrderBy(x => x, StringComparer.Ordinal).ToList(); ordenado.VivosOrdenados = true;
+            foreach (var p in ps)
+                Assert.Equal(string.Join("|", Planificador.Planea(p, libre).Select(i => i.Tipo + ">" + i.Objetivo + ">" + Json.Num(i.Prioridad)).ToArray()),
+                             string.Join("|", Planificador.Planea(p, ordenado).Select(i => i.Tipo + ">" + i.Objetivo + ">" + Json.Num(i.Prioridad)).ToArray()));
+        }
+
+        [Fact]
         public void Valida_rechaza_objetivos_inexistentes_y_propios()
         {
             var m = new ModeloAfectivo(null); var a = Mundito.P("a"); var b = Mundito.P("b"); var c = Mundito.Ctx(m, 1, a, b);

@@ -172,7 +172,7 @@ namespace PeceraNF
                     Debug.Log("[Pecera] burbujas " + (BurbujasOn ? "on" : "off"));
                 }
                 if (Input.GetKeyDown(KeyCode.F10)) Plugin.EscribeInforme("tecla F10");
-                if (Input.GetKeyDown(KeyCode.F11)) { Sonda.Tipos(); Sonda.Peticiones(); }
+                if (Input.GetKeyDown(KeyCode.F11)) { Sonda.Tipos(); Sonda.Peticiones(); Sonda.Mundo(); }
                 if (Input.GetKeyDown(KeyCode.F8))
                 {
                     Visible = !Visible;

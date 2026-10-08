@@ -66,6 +66,11 @@ namespace Pecera.Core
             l.Add(E("memoria_recientes", "6", "Episodios recientes por pawn antes de resumir.", true, 3, 50, false, Estado.NoVerificado));
             l.Add(E("memoria_resumen", "1", "1: resume episodios viejos con el LLM (1 llamada, comparte cupo de voz).", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("afectos", "1", "1: modelo afectivo por pareja (afecto, confianza, rencor...). Solo interno.", true, 0, 1, false, Estado.NoVerificado));
+            l.Add(E("agentes", "0", "1: los pawns tienen ambiciones, necesidades y planes (Persona/Agenda). Usa el LLM en lote bajo presupuesto. NO escribe en el juego: solo muestra intenciones (informe, burbujas) y las da por cumplidas al VER que el juego produce el evento.", true, 0, 1, false, Estado.NoVerificado));
+            l.Add(E("agentes_llm_dia", "12", "Llamadas maximas al LLM por dia de juego para planear (techos: planeacion 50 %, narrativa 20 %, conversacion 20 %). Con dia_segundos=120 son ~una cada 10 s: la voz ya usa una cada 25 s, ajusta a tu GPU.", true, 0, 500, false, Estado.NoVerificado));
+            l.Add(E("agentes_lote", "6", "Pawns que se planean con UNA sola llamada al LLM.", true, 1, 20, false, Estado.NoVerificado));
+            l.Add(E("agentes_pawns_tick", "40", "Pawns que se recalculan por dia de juego (reparto circular): acota el coste en el hilo principal.", true, 5, 1000, false, Estado.NoVerificado));
+            l.Add(E("agentes_burbujas", "1", "1: al adoptar un plan elegido por el LLM, el pawn lo dice en un bocadillo (max 1 por ronda). Solo dibuja.", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("rumores", "0", "1: secretos y rumores internos (usa el LLM para inventar secretos).", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("sociedad", "1", "1: facciones, lideres y favores calculados internamente (informe, sin escribir).", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("cronica", "1", "1: cronica del reino en cronica.md.", true, 0, 1, false, Estado.NoVerificado));

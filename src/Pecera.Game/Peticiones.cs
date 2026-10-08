@@ -149,7 +149,7 @@ namespace PeceraNF
         static void DryRunConsejo(List<string> tipos)
         {
             var consejo = new Consejo(Estado.Afectos);
-            var metas = new MetasReino();
+            var metas = Estado.Metas;      // las metas vivas del reino (se reajustan con las metricas en cada informe)
             foreach (string tp in tipos)
             {
                 string[] partes = tp.Split('|');

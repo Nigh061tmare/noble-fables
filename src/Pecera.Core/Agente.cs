@@ -9,6 +9,7 @@ namespace Pecera.Core
     {
         public ModeloAfectivo Afectos;
         public IList<string> Vivos;
+        public bool VivosOrdenados;      // true si Vivos ya viene ordenado (ordinal): ahorra un sort por pawn y por llamada
         public int Dia;
         public MetasReino Metas = new MetasReino();
         public Func<string, Persona> Persona;
@@ -68,10 +69,17 @@ namespace Pecera.Core
     // Es el PLAN BASE (funciona sin LLM). El LLM solo puede elegir entre lo permitido por Valida.
     public static class Planificador
     {
+        public static IList<string> Orden(ContextoMundo c)
+        {
+            if (c.VivosOrdenados) return c.Vivos;
+            var o = new List<string>(c.Vivos); o.Sort(StringComparer.Ordinal);
+            return o;
+        }
+
         static string MejorPor(string yo, ContextoMundo c, Func<Par, double> f, double minimo)
         {
             string mejor = null; double mv = minimo;
-            var orden = new List<string>(c.Vivos); orden.Sort(StringComparer.Ordinal);
+            var orden = Orden(c);
             foreach (var o in orden)
             {
                 if (o == yo) continue;
@@ -83,7 +91,7 @@ namespace Pecera.Core
 
         static string Vecino(string yo, ContextoMundo c)
         {
-            var orden = new List<string>(c.Vivos); orden.Sort(StringComparer.Ordinal);
+            var orden = new List<string>(Orden(c));
             orden.Remove(yo);
             if (orden.Count == 0) return "";
             return orden[FichaGen.Hash(yo + "|" + c.Dia) % orden.Count];
@@ -199,7 +207,7 @@ namespace Pecera.Core
         {
             var r = new Reflexion();
             string peor = null, mejor = null; double pr = 0, mr = 0;
-            var orden = new List<string>(c.Vivos); orden.Sort(StringComparer.Ordinal);
+            var orden = Planificador.Orden(c);
             foreach (var o in orden)
             {
                 if (o == p.Id) continue;

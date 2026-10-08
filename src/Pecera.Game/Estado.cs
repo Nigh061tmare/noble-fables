@@ -32,6 +32,10 @@ namespace PeceraNF
         public static Cronica Cronica;
         public static Costumbres Costumbres;
         public static Cultura Cultura;
+        public static AlmacenPersonas Personas;
+        public static Agenda Agenda;
+        public static PresupuestoLlm Presupuesto;
+        public static MetasReino Metas = new MetasReino();
         // Solo hilo principal: se rellenan al escribir el informe y se leen en el hook.
         public static readonly Dictionary<string, string> FaccionDe = new Dictionary<string, string>();
         public static readonly Dictionary<string, Dialecto> Dialectos = new Dictionary<string, Dialecto>();
@@ -101,6 +105,10 @@ namespace PeceraNF
             Cronica = new Cronica();
             Costumbres = new Costumbres();
             Cultura = new Cultura();
+            Personas = new AlmacenPersonas(Disco);
+            if (Personas.LineasCorruptas > 0) Avisos.Add("personas.jsonl: " + Personas.LineasCorruptas + " lineas ilegibles ignoradas");
+            Agenda = new Agenda();
+            Presupuesto = new PresupuestoLlm(Reloj) { LlamadasPorDia = Cfg.Int("agentes_llm_dia"), DiaTicks = (long)(Cfg.Num("dia_segundos") * TimeSpan.TicksPerSecond) };
 
             string esq = Path.Combine(Datos, "esquemas.txt");
             if (File.Exists(esq)) Catalogo = CatalogoEsquemas.Parse(File.ReadAllText(esq, new UTF8Encoding(false)));
@@ -123,6 +131,9 @@ namespace PeceraNF
             Ev.Criterio("afectos_modelo", 20, 0);
             Ev.Criterio("rumor_fuga", 1, 0);
             Ev.Criterio("sonda_pawn", 1, 0);
+            Ev.Criterio("agentes_plan_reglas", 10, 0);          // el plan por reglas se ejecuta sin excepciones
+            Ev.Criterio("agentes_plan_llm", 3, 6);               // el LLM devuelve planes validos (algun fallo es normal)
+            Ev.Criterio("agentes_intencion_observada", 1, 0);    // el juego produjo el evento que una intencion esperaba
             Ev.Criterio("peticion_capturada", 1, 0);   // Rey dormido: vimos una peticion real en cola (fase 1)
             Ev.Criterio("peticion_aplicada", 1, 0);    // Rey dormido: aplicamos Complete() real (fase 2)
             Ev.Criterio("informe_escrito", 1, 0);

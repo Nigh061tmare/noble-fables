@@ -30,6 +30,11 @@ Las claves marcadas **escribe en el juego** modifican el estado de la partida. M
 | `memoria_recientes` | `6` | 3 .. 50 | NO VERIFICADO | Episodios recientes por pawn antes de resumir. |
 | `memoria_resumen` | `1` | 0 .. 1 | NO VERIFICADO | 1: resume episodios viejos con el LLM (1 llamada, comparte cupo de voz). |
 | `afectos` | `1` | 0 .. 1 | NO VERIFICADO | 1: modelo afectivo por pareja (afecto, confianza, rencor...). Solo interno. |
+| `agentes` | `0` | 0 .. 1 | NO VERIFICADO | 1: los pawns tienen ambiciones, necesidades y planes (Persona/Agenda). Usa el LLM en lote bajo presupuesto. NO escribe en el juego: solo muestra intenciones (informe, burbujas) y las da por cumplidas al VER que el juego produce el evento. |
+| `agentes_llm_dia` | `12` | 0 .. 500 | NO VERIFICADO | Llamadas maximas al LLM por dia de juego para planear (techos: planeacion 50 %, narrativa 20 %, conversacion 20 %). Con dia_segundos=120 son ~una cada 10 s: la voz ya usa una cada 25 s, ajusta a tu GPU. |
+| `agentes_lote` | `6` | 1 .. 20 | NO VERIFICADO | Pawns que se planean con UNA sola llamada al LLM. |
+| `agentes_pawns_tick` | `40` | 5 .. 1000 | NO VERIFICADO | Pawns que se recalculan por dia de juego (reparto circular): acota el coste en el hilo principal. |
+| `agentes_burbujas` | `1` | 0 .. 1 | NO VERIFICADO | 1: al adoptar un plan elegido por el LLM, el pawn lo dice en un bocadillo (max 1 por ronda). Solo dibuja. |
 | `rumores` | `0` | 0 .. 1 | NO VERIFICADO | 1: secretos y rumores internos (usa el LLM para inventar secretos). |
 | `sociedad` | `1` | 0 .. 1 | NO VERIFICADO | 1: facciones, lideres y favores calculados internamente (informe, sin escribir). |
 | `cronica` | `1` | 0 .. 1 | NO VERIFICADO | 1: cronica del reino en cronica.md. |
