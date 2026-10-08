@@ -115,3 +115,10 @@ compiladas e instaladas (DLL en `plugins/`, tamano ~158 KB).
 4. Si ves un bocadillo con una intencion («Ana corteja a Beto»), cuenta para `bocadillo_dibujado`.
 5. **Sin tirones**: anota si notas un hitch cada `dia_segundos` s (120 por defecto). Si lo hay, baja `agentes_pawns_tick`.
 6. Devuelveme `agentes.md`, `historias.md`, `verificacion.json`, `sonda_pawn.json` y `sonda_mundo.json` (F11).
+
+### Qué debería verse en `agentes.md` con la v0.4.0 (si no, dímelo)
+- Cabecera: «Normas vigentes», «Tensión del reino» y «Última sugerencia» del director (solo texto: no ejecuta nada).
+- Por pawn: rol (tras ≥ 10 intenciones hechas), nivel de ánimo (sereno/inquieto/al límite…), ambición con %, y sus 3 intenciones.
+- `verificacion.json`: además `agentes_reflexion` ≥ 1 (la importancia acumulada dispara conclusiones).
+- Tras unos días de juego, la crónica (`cronica.md`) debe mezclar «cumple su ambición…», «El director sugiere…» y, si cambian los valores del reino, una norma.
+- `director_estilo=ninguno` apaga las sugerencias; `calmo` / `caotico` cambian el ritmo.

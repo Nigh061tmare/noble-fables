@@ -99,7 +99,7 @@ namespace PeceraNF
                 Estado.Afectos.DesdeOpinion(ida, idb, delta, rasgo);
                 Estado.Ev.Ok("afectos_modelo", "");
             }
-            string recuerdos = Estado.Cfg.Bool("memoria") ? Estado.Mem.ParaPrompt(ida, 400) : "";
+            string recuerdos = Estado.Cfg.Bool("memoria") ? Recuerdos(ida, a, b, porQue) : "";
             if (Estado.Cfg.Bool("memoria") && abs >= Estado.Cfg.Num("umbral_habla") && !rasgo)
                 Estado.Mem.Registra(ida, "opinion", idb, (delta > 0 ? "empezo a apreciar a " : "empezo a desconfiar de ") + b + " (" + porQue + ")", abs);
             if (Estado.Cfg.Bool("rumores")) Rumores(ida, idb, a, b);
@@ -122,6 +122,15 @@ namespace PeceraNF
                 try { Redacta(pawn, of, reason, a, b, ida, idb, porQue, delta, valor, ficha, recuerdos, dir); }
                 finally { Estado.Voz.Release(); }
             });
+        }
+
+        // Recuperacion tipo Generative Agents: recencia 0.5 + relevancia 3 + importancia 2 para ESTA situacion (nombres y motivo),
+        // en vez de «los ultimos tres hechos». Si no hay nada relevante vuelve al comportamiento anterior.
+        static string Recuerdos(string id, string a, string b, string porQue)
+        {
+            var r = Estado.Mem.Recupera(id, a + " " + b + " " + porQue, 3);
+            string t = r.Count > 0 ? string.Join("; ", r.ToArray()) : Estado.Mem.ParaPrompt(id, 400);
+            return t.Length > 400 ? t.Substring(0, 400) : t;
         }
 
         // La confidencia/chisme se dispara con el contacto que ya observamos (la API de

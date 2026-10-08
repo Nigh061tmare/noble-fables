@@ -30,12 +30,16 @@ namespace PeceraNF
 
         public static void Recuerda(string id, Pawn p) { if (p != null) Pawns[id] = new WeakReference(p); }
 
+        static int _ultimoMes = -1;
+
         static ContextoMundo Ctx(List<string> ids, int dia)
         {
             return new ContextoMundo
             {
                 Afectos = Estado.Afectos, Vivos = ids, VivosOrdenados = true, Dia = dia, Metas = Estado.Metas,
-                Persona = id => Estado.Personas.Get(id), Nombre = id => Estado.Ids.Nombre(id)
+                Persona = id => Estado.Personas.Get(id), Nombre = id => Estado.Ids.Nombre(id),
+                UmbralRencorHostil = 0.35 + Estado.Normas.UmbralHostilExtra, BonoHospitalidad = Estado.Normas.BonoHospitalidad,
+                PuedeHablar = (a, b) => Estado.Freno.Puede(a, b, dia)
             };
         }
 
@@ -78,8 +82,18 @@ namespace PeceraNF
                     int ult; if (!UltimoDia.TryGetValue(p.Id, out ult)) ult = dia - 1;
                     double dias = Math.Max(1, dia - ult); UltimoDia[p.Id] = dia;
                     foreach (var a in Agente.Consolida(p, Estado.Agenda, dias))
-                        Estado.Cronica.Anota(dia, "sueno", p.Nombre + " cumple su ambicion: " + a.Texto, 5);
+                    {
+                        var sucesora = Agente.Sucesora(p, a, dia);
+                        Estado.Cronica.Anota(dia, "sueno", p.Nombre + " cumple su ambicion (" + a.Texto + ") y ahora aspira a " + sucesora.Texto, 5);
+                    }
+                    // Reflexion por importancia acumulada (Generative Agents): conclusiones que vuelven al recuperar recuerdos.
+                    if (Estado.Cfg.Bool("memoria") && Estado.Mem.ToqueReflexion(p.Id))
+                    {
+                        var ins = Agente.Insights(p, Estado.Mem, ctx);
+                        if (ins.Count > 0) Estado.Ev.Ok("agentes_reflexion", ins[0]);
+                    }
                 }
+                MensualYDirector(ids, ctx, dia);
                 Estado.Agenda.Caduca(dia);
                 PlanLlmEnLote(chunk, reglas, ctx);
                 if (_rondas % 10 == 0) Estado.Personas.Guarda();
@@ -89,6 +103,29 @@ namespace PeceraNF
                 Estado.Ev.Fail("agentes_plan_reglas", e.GetType().Name + ": " + e.Message);
                 UnityEngine.Debug.Log("[Pecera] agentes: " + e);
             }
+        }
+
+        // Normas (cada 30 dias) y director de drama (cada dia). Ni una ni otro ejecutan nada en el juego: las normas solo mueven
+        // los umbrales del planificador y el director deja SUGERENCIAS en agentes.md/cronica (su ejecucion real esperaria a A8-A12).
+        static void MensualYDirector(List<string> ids, ContextoMundo ctx, int dia)
+        {
+            if (dia / 30 != _ultimoMes)
+            {
+                _ultimoMes = dia / 30;
+                var ps = new List<Persona>(); foreach (var id in ids) { var p = Estado.Personas.Get(id); if (p != null) ps.Add(p); }
+                if (ps.Count >= 5)
+                {
+                    foreach (var cambio in Estado.Normas.Evalua(dia, Estado.Cultura, ps, id => 1, 0)) Estado.Cronica.Anota(dia, "norma", cambio, 6);
+                    Estado.Agenda.EnfriaHostil = (int)Math.Round(10 * Estado.Normas.FactorEnfriaHostil);
+                }
+            }
+            if (Estado.Director == null) return;
+            double t = Director.Mide(Estado.Afectos, ids, Estado.Agenda, Estado.Cronica, dia);
+            var s = Estado.Director.Decide(dia, t, Estado.Afectos, ids, id => Estado.Personas.Get(id));
+            if (s == null) return;
+            var nombres = new List<string>(); foreach (var id in s.Pawns) nombres.Add(Estado.Ids.Nombre(id));
+            Estado.UltimaSugerencia = "dia " + dia + ": " + s.Tipo + (nombres.Count > 0 ? " (" + string.Join(", ", nombres.ToArray()) + ")" : "") + " - " + s.Razon + " [tension " + Json.Num(s.TensionAntes) + " frente a objetivo " + Json.Num(s.Objetivo) + "]";
+            Estado.Cronica.Anota(dia, "director", "El director sugiere: " + Estado.UltimaSugerencia, 2);
         }
 
         static void PlanLlmEnLote(List<Persona> chunk, List<List<Intencion>> reglas, ContextoMundo ctx)
@@ -162,14 +199,22 @@ namespace PeceraNF
             var sb = new StringBuilder("# Ambiciones y planes\n\n");
             if (!Estado.Cfg.Bool("agentes")) return sb.Append("`agentes=0`: desactivado.\n").ToString();
             var ps = Estado.Personas.Todas();
+            var ids = new List<string>(); foreach (var f in Estado.Fichas.Todas()) ids.Add(f.Id);
             ps.Sort((a, b) => { int c = Estado.Agenda.De(b.Id).Count.CompareTo(Estado.Agenda.De(a.Id).Count); return c != 0 ? c : string.CompareOrdinal(a.Id, b.Id); });
             sb.Append("LLM hoy: ").Append(Estado.Presupuesto.Total).Append(" / ").Append(Estado.Cfg.Int("agentes_llm_dia")).Append(" llamadas (planeacion ").Append(Estado.Presupuesto.Usadas(PrioridadLlm.Planeacion)).Append("). ");
+            var vigentes = new List<string>(); foreach (var nm in Estado.Normas.Activas) vigentes.Add(nm.Id);
+            sb.Append("Normas vigentes: ").Append(vigentes.Count == 0 ? "(ninguna)" : string.Join(", ", vigentes.ToArray())).Append(". ");
+            if (Estado.Director != null) sb.Append("Tension del reino ").Append(Json.Num(Estado.Director.Tension)).Append(" (director ").Append(Estado.Director.Estilo.ToString().ToLowerInvariant()).Append("). Ultima sugerencia: ").Append(Estado.UltimaSugerencia.Length > 0 ? Estado.UltimaSugerencia : "(ninguna)").Append(". ");
             sb.Append("Intenciones hechas ").Append(Estado.Agenda.Hechas).Append(", fallidas ").Append(Estado.Agenda.Fallidas).Append(".\n\n");
             int n = 0;
             foreach (var p in ps)
             {
                 if (n++ >= 25) break;
-                sb.Append("## ").Append(p.Nombre).Append(" — ").Append(p.Resumen()).Append("\n\n");
+                var hechas = new Dictionary<TipoIntencion, int>(); Dictionary<TipoIntencion, int> hh;
+                if (Estado.Agenda.HechasPorPawn.TryGetValue(p.Id, out hh)) hechas = hh;
+                string rol = Roles.De(hechas);
+                sb.Append("## ").Append(p.Nombre).Append(rol.Length > 0 ? " (" + rol + ")" : "").Append(" — ").Append(p.Resumen()).Append("\n\n");
+                sb.Append("Animo: ").Append(AnimoCalc.Nivel(AnimoCalc.Calcula(p, Estado.Afectos, ids), Rupturas.Umbral(p))).Append(".\n");
                 foreach (var i in Estado.Agenda.Top(p.Id, 3)) sb.Append("- (").Append(Json.Num(i.Prioridad)).Append(", ").Append(i.Origen).Append(") ").Append(i.Texto).Append(" — ").Append(i.Razon).Append('\n');
                 string pen; if (Pensamientos.TryGetValue(p.Id, out pen)) sb.Append("- piensa: ").Append(pen).Append('\n');
                 sb.Append('\n');

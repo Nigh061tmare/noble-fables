@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 (2026-10-08) — Fase 3 ampliada tras investigar Generative Agents, RimWorld, Project Sid, alife-sdk, AI Town e IAUS
+
+Todo **HECHO-NUBE** (249 tests, simulador) y **NO VERIFICADO en partida**. Nada escribe en el juego. Fuentes, adopciones y limites: `docs/INVESTIGACION.md`.
+- **Memoria**: `Recupera` (recencia 0.5 / relevancia 3 / importancia 2) y reflexion por importancia acumulada con conclusiones guardadas como recuerdos; la voz del juego recupera por relevancia.
+- **Planes de varios pasos** (`Guiones`) y ambiciones que llevan tiempo (plazo minimo 20/60/150 dias) con sucesion de ambiciones (`Agente.Sucesora`): 16–18 cumplidas al anio entre 24 pawns (antes 80–140 triviales).
+- **Animo y rupturas** al estilo RimWorld (+ inspiracion), **Director de drama** (3 estilos), **Normas** (paz publica / ojo por ojo / hospitalidad) con histeresis, **roles emergentes**, **etapas de relacion**, **freno de conversacion por pareja**, **curvas IAUS**, `RedSecretos.Escandalo`.
+- `Mente` (juego): reflexion, sucesion de ambiciones, normas y sugerencias del director; `agentes.md` muestra animo, rol, normas, tension y la ultima sugerencia. `director_estilo` en config.
+- Hallazgos del simulador que cambiaron el diseno: ambiciones triviales (los planes de 3 pasos se cumplian en 3 dias), animo base demasiado bajo (40 % de pawns-dia bajo el umbral), director sin actuadores (la tension no se movia) y normas que parpadeaban.
+
 ## 0.3.0 (2026-10-08) — agentes con proposito (respuesta al PROMPT_OPUS, Fase 0 y 1 en la nube)
 
 Todo **HECHO-NUBE** (tests + simulador, 219 tests) y **NO VERIFICADO en partida**. Nada de esto escribe en el juego.

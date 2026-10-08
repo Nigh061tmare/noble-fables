@@ -70,6 +70,7 @@ namespace Pecera.Core
             l.Add(E("agentes_llm_dia", "12", "Llamadas maximas al LLM por dia de juego para planear (techos: planeacion 50 %, narrativa 20 %, conversacion 20 %). Con dia_segundos=120 son ~una cada 10 s: la voz ya usa una cada 25 s, ajusta a tu GPU.", true, 0, 500, false, Estado.NoVerificado));
             l.Add(E("agentes_lote", "6", "Pawns que se planean con UNA sola llamada al LLM.", true, 1, 20, false, Estado.NoVerificado));
             l.Add(E("agentes_pawns_tick", "40", "Pawns que se recalculan por dia de juego (reparto circular): acota el coste en el hilo principal.", true, 5, 1000, false, Estado.NoVerificado));
+            l.Add(E("director_estilo", "clasico", "Director de drama (solo informa en agentes.md, no ejecuta nada): ninguno | calmo | clasico | caotico. Mide la tension del reino y sugiere conflicto si hay calma o alivio si hay demasiada tension.", false, 0, 0, false, Estado.NoVerificado));
             l.Add(E("agentes_burbujas", "1", "1: al adoptar un plan elegido por el LLM, el pawn lo dice en un bocadillo (max 1 por ronda). Solo dibuja.", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("rumores", "0", "1: secretos y rumores internos (usa el LLM para inventar secretos).", true, 0, 1, false, Estado.NoVerificado));
             l.Add(E("sociedad", "1", "1: facciones, lideres y favores calculados internamente (informe, sin escribir).", true, 0, 1, false, Estado.NoVerificado));

@@ -56,3 +56,24 @@ Defectos elegidos con el simulador (y por que): `ProbBase` de chismorreo = **0.0
 Los supuestos del simulador (porcentaje de interacciones positivas 62 %, etc.) estan en `Mundo.cs`.
 
 Las tradiciones no llegan a emerger en 360 dias porque hacen falta 3 anios distintos en la misma temporada (`Costumbres`, con test unitario).
+
+
+## Fase 3 (agentes realistas) — 24 pawns, 360 días, semillas 1–4
+
+| Métrica | Resultado | Criterio del test |
+|---|---|---|
+| Ambiciones cumplidas al año | 16–18 (≈ 0.7 por pawn) | entre 4 y 72 |
+| Necesidad social media / más urgente media | 0.67–0.78 / 0.27–0.34 | social entre 0.2 y 0.95; urgente > 0.05 |
+| Pawns-día bajo su umbral de ruptura | 2.1–3.5 % | ≤ 15 % |
+| Rupturas al año (retiro/arrebato/hundimiento) | 13–34 (todas retiros) | 1 … 864 |
+| Reflexiones / conclusiones | 467–521 / 656–719 | > 24 |
+| Tensión media / objetivo medio | 0.42–0.45 / 0.45 | entre 0.30 y 0.60 |
+| Días a > 0.2 de la curva objetivo | 20–24 % | ≤ 35 % |
+| Eventos del director (escándalos / rivalidades / fiestas / reconciliaciones) | ≈ 70 (18–27 / 17–21 / 13–17 / 15–16) | drama > 10 y alivio > 10 |
+| Normas aprobadas / derogadas | 2–3 / 0–1 | derogadas ≤ aprobadas ≤ 6 |
+| Oscilación semanal / estabilidad / días sin progreso | 5.2–5.7 % / > 0.5 / ≤ 5 | < 10 % / > 0.5 / ≤ 10 |
+
+Por qué cambió el diseño al medir: (1) los planes de 3 pasos se completaban en 3 días y salían 80–140 ambiciones cumplidas al año → pasos con ≥ 2 días entre sí y plazo mínimo por ambición;
+(2) con ánimo = 0.6·necesidades + 0.3·clima el 40 % de los pawns-día estaba bajo su umbral → suelo de contento 0.3; (3) el director no movía la tensión (medía solo cuota global de pares) → añadir la intensidad de los 5 peores rencores
+y eventos más fuertes; (4) las normas parpadeaban → margen de 0.10 entre normas rivales y vigencia mínima de 90 días.
+Limitaciones (roles casi todos «mediador», hundimientos casi inexistentes): `docs/INVESTIGACION.md` §3.

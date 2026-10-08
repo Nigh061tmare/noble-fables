@@ -34,6 +34,7 @@ Las claves marcadas **escribe en el juego** modifican el estado de la partida. M
 | `agentes_llm_dia` | `12` | 0 .. 500 | NO VERIFICADO | Llamadas maximas al LLM por dia de juego para planear (techos: planeacion 50 %, narrativa 20 %, conversacion 20 %). Con dia_segundos=120 son ~una cada 10 s: la voz ya usa una cada 25 s, ajusta a tu GPU. |
 | `agentes_lote` | `6` | 1 .. 20 | NO VERIFICADO | Pawns que se planean con UNA sola llamada al LLM. |
 | `agentes_pawns_tick` | `40` | 5 .. 1000 | NO VERIFICADO | Pawns que se recalculan por dia de juego (reparto circular): acota el coste en el hilo principal. |
+| `director_estilo` | `clasico` | texto | NO VERIFICADO | Director de drama (solo informa en agentes.md, no ejecuta nada): ninguno \| calmo \| clasico \| caotico. Mide la tension del reino y sugiere conflicto si hay calma o alivio si hay demasiada tension. |
 | `agentes_burbujas` | `1` | 0 .. 1 | NO VERIFICADO | 1: al adoptar un plan elegido por el LLM, el pawn lo dice en un bocadillo (max 1 por ronda). Solo dibuja. |
 | `rumores` | `0` | 0 .. 1 | NO VERIFICADO | 1: secretos y rumores internos (usa el LLM para inventar secretos). |
 | `sociedad` | `1` | 0 .. 1 | NO VERIFICADO | 1: facciones, lideres y favores calculados internamente (informe, sin escribir). |

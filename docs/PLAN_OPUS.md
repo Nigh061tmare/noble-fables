@@ -67,6 +67,21 @@ y al `AgenteDriver`. Panel F8 de ambiciones: pendiente (hoy `agentes.md`).
 **Fase 4 — Pulido.** Presupuesto adaptativo segun la latencia medida del LLM, `informe.md` con las historias de la semana (ya existe `historias.md`), test de
 integracion del pipeline del hook, medicion real del tiron del informe con muchos pawns.
 
+## 2b. Fase 3 ampliada (v0.4.0, tras investigar Generative Agents, RimWorld, Project Sid, alife-sdk, AI Town e IAUS — `docs/INVESTIGACION.md`)
+
+| Mejora | Dónde | Estado |
+|---|---|---|
+| Recuperación de memoria (recencia 0.5 / relevancia 3 / importancia 2) y reflexión por importancia acumulada | `Core/Memoria.cs`, `Agente.Insights`; la voz del juego ya la usa | HECHO-NUBE, cableado; PENDIENTE-PC |
+| Guiones de varios pasos hacia cada ambición, sucesión de ambiciones y duración mínima por plazo | `Core/Guion.cs`, `Agente.Sucesora` | HECHO-NUBE, cableado en `Mente` |
+| Ánimo, rupturas (35/20/5 %, 10/3/0.7 días) e inspiración | `Core/Animo.cs` | HECHO-NUBE; en el juego solo informativo |
+| Director de drama (3 estilos, mide tensión, sugiere conflicto o alivio) | `Core/Director.cs` | HECHO-NUBE; en el juego **sugiere** en `agentes.md` (`director_estilo`); ejecutarlo = A8–A12 |
+| Normas colectivas (paz pública / ojo por ojo / hospitalidad) | `Core/Normas.cs` | HECHO-NUBE; cableado (mueven los umbrales del planificador) |
+| Roles emergentes, etapas de relación, freno de conversación, curvas IAUS | `Core/Normas.cs`, `Agente.cs` | HECHO-NUBE; roles y etapas en `agentes.md` / prompt del LLM |
+| Escándalo forzado por el director | `RedSecretos.Escandalo` | HECHO-NUBE (solo simulador) |
+
+**Para que «jueguen solos» de verdad** falta lo que ya listaba la tabla A: ejecutar las intenciones en el juego (A8 peticiones propias, A9 esquemas, A10 investigación, A11 planos, A12 misiones)
+y leer necesidades/habilidades/familia reales (A4–A6). La lógica de «qué hacer, a quién y cuándo» y sus guardarraíles están hechos y medidos; el cuello de botella sigue siendo la API del juego.
+
 ## 3. Solicitudes concretas al usuario (ordenadas)
 
 1. **Compila e instala la v0.3.0** (`.\compilar.ps1 -Instalar`, juego cerrado). Pegame la salida si hay errores: es la primera vez que `Mente.cs`, `Identidad.cs` y `Sonda.Mundo()` ven el compilador real.
