@@ -12,6 +12,9 @@ namespace Pecera.Core
         public bool VivosOrdenados;      // true si Vivos ya viene ordenado (ordinal): ahorra un sort por pawn y por llamada
         public int Dia;
         public MetasReino Metas = new MetasReino();
+        public double UmbralRencorHostil = 0.35;                       // lo mueven las normas (paz publica / ojo por ojo)
+        public double BonoHospitalidad;                                 // idem
+        public Func<string, string, bool> PuedeHablar;                  // freno de conversacion por pareja (opcional)
         public Func<string, Persona> Persona;
         public Func<string, string> Nombre = id => id;
     }
@@ -76,7 +79,7 @@ namespace Pecera.Core
             return o;
         }
 
-        static string MejorPor(string yo, ContextoMundo c, Func<Par, double> f, double minimo)
+        public static string MejorPor(string yo, ContextoMundo c, Func<Par, double> f, double minimo)
         {
             string mejor = null; double mv = minimo;
             var orden = Orden(c);
@@ -109,16 +112,19 @@ namespace Pecera.Core
             double v; string nec = p.Needs.Mas(out v);
 
             // ---- necesidades ----
+            // La urgencia sigue una curva logistica (IAUS, Dave Mark): casi nada hasta que la necesidad baja de ~0.45 y despues sube deprisa.
+            double urg = Curvas.Logistica(1 - v, 0.55, 9);
             if (v < 0.45)
             {
                 if (nec == "social")
                 {
                     string amigo = MejorPor(p.Id, c, par => par.Afecto, 0.05) ?? Vecino(p.Id, c);
-                    if (amigo != null && amigo.Length > 0) r.Add(Mk(p, TipoIntencion.Charlar, amigo, "cohesion", 1 - v, yo + " busca compania y va a charlar con " + c.Nombre(amigo), "necesidad social " + Json.Num(v), c.Dia));
+                    if (amigo != null && c.PuedeHablar != null && !c.PuedeHablar(p.Id, amigo)) amigo = Vecino(p.Id, c);
+                    if (amigo != null && amigo.Length > 0 && (c.PuedeHablar == null || c.PuedeHablar(p.Id, amigo))) r.Add(Mk(p, TipoIntencion.Charlar, amigo, "cohesion", urg, yo + " busca compania y va a charlar con " + c.Nombre(amigo), "necesidad social " + Json.Num(v), c.Dia));
                 }
-                else if (nec == "descanso") r.Add(Mk(p, TipoIntencion.Descansar, "", "", 1 - v, yo + " necesita descansar", "descanso " + Json.Num(v), c.Dia));
-                else if (nec == "seguridad") r.Add(Mk(p, TipoIntencion.Pedir, "", "defensa", 0.9 - v, yo + " pide mas proteccion para el reino", "seguridad " + Json.Num(v), c.Dia));
-                else r.Add(Mk(p, TipoIntencion.Aprender, "", "cultura", 0.9 - v, yo + " quiere hacer algo que le llene: aprender", "autorrealizacion " + Json.Num(v), c.Dia));
+                else if (nec == "descanso") r.Add(Mk(p, TipoIntencion.Descansar, "", "", urg, yo + " necesita descansar", "descanso " + Json.Num(v), c.Dia));
+                else if (nec == "seguridad") r.Add(Mk(p, TipoIntencion.Pedir, "", "defensa", 0.9 * urg, yo + " pide mas proteccion para el reino", "seguridad " + Json.Num(v), c.Dia));
+                else r.Add(Mk(p, TipoIntencion.Aprender, "", "cultura", 0.9 * urg, yo + " quiere hacer algo que le llene: aprender", "autorrealizacion " + Json.Num(v), c.Dia));
             }
 
             // ---- ambiciones ----
@@ -126,6 +132,15 @@ namespace Pecera.Core
             {
                 if (a.Cumplida) continue;
                 double w = a.Prioridad * (1 - 0.5 * a.Progreso);
+                // Plan de varios pasos: si hay guion vigente, el paso actual manda sobre el impulso suelto.
+                var gu = Guiones.De(p, a, c);
+                if (gu != null && gu.PasoActual != null)
+                {
+                    var ps = gu.PasoActual;
+                    string txt = yo + " da el siguiente paso de su plan (" + a.Texto + "): " + ps.Tipo.ToString().ToLowerInvariant() + (ps.Objetivo.Length > 0 ? " con " + c.Nombre(ps.Objetivo) : "");
+                    r.Add(Mk(p, ps.Tipo, ps.Objetivo, ps.Categoria, w + 0.15, txt, "paso " + (gu.Actual + 1) + "/" + gu.Pasos.Count + " de: " + a.Texto, c.Dia));
+                    continue;
+                }
                 switch (a.Categoria)
                 {
                     case "casarse":
@@ -136,7 +151,7 @@ namespace Pecera.Core
                     }
                     case "vengar":
                     {
-                        string t = MejorPor(p.Id, c, par => par.Rencor, 0.35);
+                        string t = MejorPor(p.Id, c, par => par.Rencor, c.UmbralRencorHostil);
                         if (t != null)
                         {
                             double fuerza = c.Afectos.Get(p.Id, t).Rencor * (0.5 + 0.5 * p.Neuroticismo) * (1 - 0.5 * p.Amabilidad);
@@ -168,6 +183,7 @@ namespace Pecera.Core
             string deudor = MejorPor(p.Id, c, par => par.Deuda, 0.4);
             if (deudor != null) r.Add(Mk(p, TipoIntencion.Consolar, deudor, "cohesion", 0.4 + 0.3 * p.Amabilidad, yo + " quiere devolver un favor a " + c.Nombre(deudor), "gratitud", c.Dia));
 
+            if (c.BonoHospitalidad > 0) foreach (var i in r) if (i.Tipo == TipoIntencion.Celebrar || i.Tipo == TipoIntencion.Consolar) i.Prioridad = Math.Min(1, i.Prioridad + c.BonoHospitalidad);
             r.RemoveAll(i => !Valida(p, i, c));
             r.Sort((x, y) => { int k = y.Prioridad.CompareTo(x.Prioridad); return k != 0 ? k : string.CompareOrdinal(x.Texto, y.Texto); });
             if (r.Count > 3) r.RemoveRange(3, r.Count - 3);
@@ -185,8 +201,8 @@ namespace Pecera.Core
             Par par = i.Objetivo.Length > 0 ? c.Afectos.Get(p.Id, i.Objetivo) : new Par();
             switch (i.Tipo)
             {
-                case TipoIntencion.Vengarse: return par.Rencor >= 0.35 && p.Amabilidad <= 0.9 && par.Deuda < 0.4;
-                case TipoIntencion.Intrigar: return (par.Rencor >= 0.3 || par.Rivalidad >= 0.3) && p.Amabilidad <= 0.9 && par.Deuda < 0.4;
+                case TipoIntencion.Vengarse: return par.Rencor >= c.UmbralRencorHostil && p.Amabilidad <= 0.9 && par.Deuda < 0.4;
+                case TipoIntencion.Intrigar: return (par.Rencor >= c.UmbralRencorHostil - 0.05 || par.Rivalidad >= 0.3) && p.Amabilidad <= 0.9 && par.Deuda < 0.4;
                 case TipoIntencion.Cortejar: return par.Afecto >= 0.0 && par.Rencor < 0.3;
                 case TipoIntencion.Pedir: return i.Categoria.Length == 0 || Array.IndexOf(MetasReino.Categorias, i.Categoria) >= 0;
                 default: return true;
@@ -203,6 +219,51 @@ namespace Pecera.Core
     // Ciclo vital diario: reflexion -> (planea) -> consolida. Reglas puras y deterministas.
     public static class Agente
     {
+        // Conclusiones («insights») al llegar el umbral de importancia acumulada (Generative Agents: 3 focos x hasta 5 ideas; aqui 2 focos
+        // por reglas, el LLM puede pulir el texto). Se guardan en la memoria como recuerdos de peso alto, asi vuelven en la recuperacion.
+        public static List<string> Insights(Persona p, Memoria mem, ContextoMundo c)
+        {
+            var l = new List<string>();
+            int k = 0;
+            foreach (var kv in mem.PesoPorPersona(p.Id))
+            {
+                if (k >= 2) break;
+                if (!Planificador.Orden(c).Contains(kv.Key)) continue;
+                Par par = c.Afectos.Get(p.Id, kv.Key);
+                string nom = c.Nombre(kv.Key), t;
+                if (par.Rencor > 0.5) t = p.Nombre + " ha llegado a la conclusion de que " + nom + " no es de fiar.";
+                else if (par.Rivalidad > 0.4) t = p.Nombre + " ve a " + nom + " como un rival al que superar.";
+                else if (par.Afecto > 0.4) t = p.Nombre + " considera a " + nom + " un apoyo en el que confiar.";
+                else continue;
+                k++;
+                l.Add(t);
+                mem.Registra(p.Id, "reflexion", kv.Key, t, 8);
+            }
+            return l;
+        }
+
+        // Al cumplir una ambicion nace otra: nadie se queda sin proposito. Sigue una cadena de vida plausible; el LLM puede sustituirla.
+        public static Ambicion Sucesora(Persona p, Ambicion hecha, int dia)
+        {
+            string cat, txt;
+            switch (hecha.Categoria)
+            {
+                case "casarse": cat = "proteger"; txt = "proteger a su familia"; break;
+                case "aprender": cat = "descubrir"; txt = "descubrir los secretos del saber antiguo"; break;
+                case "descubrir": cat = "mandar"; txt = "poner su saber al servicio del reino"; break;
+                case "enriquecerse": cat = "mandar"; txt = "usar su fortuna para ganar influencia"; break;
+                case "proteger": cat = "paz"; txt = "vivir en paz con los suyos"; break;
+                case "mandar": cat = "paz"; txt = "dejar un buen legado"; break;
+                case "vengar": cat = "paz"; txt = "cerrar el capitulo de la venganza"; break;
+                default: cat = "aprender"; txt = "aprender algo nuevo"; break;
+            }
+            p.Logros++;
+            p.Ambiciones.RemoveAll(x => x.Cumplida && p.Ambiciones.IndexOf(x) < p.Ambiciones.Count - 3);   // el historial no crece sin limite
+            var n = new Ambicion { Texto = txt, Categoria = cat, Plazo = (cat == "mandar" || cat == "proteger" || cat == "paz") ? Plazo.Largo : Plazo.Medio, Creada = dia, Prioridad = Math.Min(0.9, 0.5 + 0.2 * p.Apertura + 0.1 * p.Logros) };
+            p.Ambiciones.Add(n);
+            return n;
+        }
+
         public static Reflexion Reflexiona(Persona p, ContextoMundo c)
         {
             var r = new Reflexion();
@@ -276,11 +337,24 @@ namespace Pecera.Core
                     case TipoIntencion.Aprender: p.Needs.Pon("autorrealizacion", p.Needs.Autorrealizacion + 0.15); break;
                     case TipoIntencion.Pedir: p.Needs.Pon("seguridad", p.Needs.Seguridad + 0.05); break;
                 }
+                Guion avanzado = Guiones.Avanza(p, i, ag.Hoy);
+                if (avanzado != null)
+                {
+                    // El progreso de una ambicion con plan ES el avance del plan (95 % como maximo hasta completarlo del todo).
+                    var amb = p.Ambiciones.Find(x => x.Categoria == avanzado.Ambicion && !x.Cumplida);
+                    if (amb != null)
+                    {
+                        bool madura = ag.Hoy - amb.Creada >= amb.DiasMinimos;
+                        amb.Progreso = Math.Max(amb.Progreso, avanzado.Terminado ? (madura ? 1 : 0.95) : 0.95 * avanzado.Actual / avanzado.Pasos.Count);
+                        if (amb.Progreso >= 1) { amb.Cumplida = true; cumplidas.Add(amb); }
+                    }
+                    continue;
+                }
                 string cat = CategoriaDe(i);
                 foreach (var a in p.Ambiciones)
                 {
                     if (a.Cumplida || a.Categoria != cat) continue;
-                    a.Progreso = Math.Min(1, a.Progreso + 0.06 * (0.5 + p.Escrupulosidad));
+                    a.Progreso = Math.Min(0.95, a.Progreso + 0.02 * (0.5 + p.Escrupulosidad));   // goteo sin plan; solo completar el plan lo cumple
                     if (a.Progreso >= 1) { a.Cumplida = true; cumplidas.Add(a); }
                     break;
                 }
@@ -309,6 +383,8 @@ namespace Pecera.Core
             {
                 var p = ps[k];
                 sb.Append("- id=").Append(p.Id).Append(" nombre=").Append(p.Nombre).Append(": ").Append(p.Resumen());
+                string vinc = Relaciones.Resumen(c.Afectos, p.Id, c.Vivos, c.Nombre);
+                if (vinc.Length > 0) sb.Append(" | vinculos: ").Append(vinc);
                 if (k < sugeridas.Count && sugeridas[k].Count > 0)
                 {
                     sb.Append(" | opciones: ");
@@ -356,6 +432,23 @@ namespace Pecera.Core
                 if (pensar.Length > 0 && pensar.Length <= 160) res.Pensamientos[id] = pensar;
             }
             return res;
+        }
+    }
+}
+
+namespace Pecera.Core
+{
+    // Curvas de respuesta del IAUS: convierten una magnitud 0..1 en una puntuacion 0..1 sin tocar la logica de decision.
+    public static class Curvas
+    {
+        public static double Lineal(double x) { return Math.Max(0, Math.Min(1, x)); }
+        public static double Cuadratica(double x) { x = Lineal(x); return x * x; }
+        // Logistica normalizada: 0 en x=0 y 1 en x=1; el centro y la pendiente fijan donde "empieza a importar".
+        public static double Logistica(double x, double centro, double pendiente)
+        {
+            double f0 = 1 / (1 + Math.Exp(pendiente * centro)), f1 = 1 / (1 + Math.Exp(-pendiente * (1 - centro)));
+            double f = 1 / (1 + Math.Exp(-pendiente * (Lineal(x) - centro)));
+            return Math.Max(0, Math.Min(1, (f - f0) / (f1 - f0)));
         }
     }
 }

@@ -53,7 +53,7 @@ namespace Pecera.Core
         {
             var c = new Conversacion { A = a.Id, B = b.Id, Tema = t, Dia = dia };
             c.Exito = rng.Chance(ProbExito(a, b, m, t));
-            double mag = 0.15 + 0.25 * rng.Next();
+            double mag = 0.3 + 0.4 * rng.Next();       // calibrado con el simulador: con 0.15-0.4 casi nadie llegaba a tener amigos en un anio
             switch (t)
             {
                 case Tema.Saludo:

@@ -16,7 +16,12 @@ namespace Pecera.Sim
         public double ProgresoMedioAmbiciones, NecesidadSocialMedia, NecesidadMinimaMedia;
         public int HistoriasGeneradas;
         public string HistoriasMd = "";
-        public string TiposIntencion = "";
+        public string TiposIntencion = "", AmbicionesPorCategoria = "";
+        public int Rupturas, RupturasRetiro, RupturasArrebato, RupturasHundimiento, InspiracionesAnimo, Reflexiones, InsightsGenerados, GuionesCompletados;
+        public double AnimoMedio, PorcentajeBajoUmbral;
+        public int DirectorEventos, DirectorEscandalos, DirectorRivalidades, DirectorFiestas, DirectorReconciliaciones;
+        public double TensionMedia, TensionFueraDeBandaPct;
+        public int NormasAprobadas, NormasDerogadas; public string NormasFinales = "", Roles = "", Etapas = "";
     }
 
     // LLM de mentira para el simulador: elige entre las "opciones" que lista el prompt. Con probabilidad
@@ -75,6 +80,12 @@ namespace Pecera.Sim
         readonly Dictionary<TipoIntencion, int> tiposVistos = new Dictionary<TipoIntencion, int>();
         readonly Dictionary<int, Intencion> porEsquema = new Dictionary<int, Intencion>();
         int llamadasHoy, diaLlamadas = -1;
+        Director director;
+        Normas normas;
+        FrenoConversacion freno;
+        readonly Dictionary<string, int> retiroHasta = new Dictionary<string, int>();
+        int hostilesMes, dirDias, dirFuera; double dirSuma;
+        double animoSuma; int animoN, bajoUmbralN;
 
         void IniciaAgentes()
         {
@@ -84,18 +95,29 @@ namespace Pecera.Sim
             presupuesto = new PresupuestoLlm(reloj) { LlamadasPorDia = cfg.LlamadasLlmDia, DiaTicks = compuerta.DiaTicks };
             mente = new MenteSimulada(cfg.Seed * 17 + 3) { PFalla = cfg.ProbLlmCae };
             rngAg = new Rng(cfg.Seed * 29 + 5);
+            director = new Director(cfg.Seed * 41 + 9) { Estilo = cfg.EstiloDirector };
+            normas = new Normas();
+            freno = new FrenoConversacion { Dias = 2 };
+            memoria.UmbralReflexion = 12;
         }
 
         ContextoMundo Ctx()
         {
-            return new ContextoMundo { Afectos = afectos, Vivos = ids, Dia = dia, Metas = metas, Persona = id => personas.Get(id), Nombre = id => nombres.ContainsKey(id) ? nombres[id] : id };
+            return new ContextoMundo
+            {
+                Afectos = afectos, Vivos = ids, Dia = dia, Metas = metas, Persona = id => personas.Get(id), Nombre = id => nombres.ContainsKey(id) ? nombres[id] : id,
+                UmbralRencorHostil = 0.35 + normas.UmbralHostilExtra, BonoHospitalidad = normas.BonoHospitalidad, PuedeHablar = (a, b) => freno.Puede(a, b, dia)
+            };
         }
 
         void AgentesDia()
         {
             var ctx = Ctx();
-            // 1) reflexion + plan base por reglas (gratis)
+            // 0) animo y rupturas (RimWorld), reflexion por importancia (Generative Agents) y director de drama
             var vivos = ids.ToList();
+            AnimoYReflexion(ctx);
+            DirectorDia(ctx);
+            // 1) reflexion + plan base por reglas (gratis)
             var reglas = new Dictionary<string, List<Intencion>>();
             foreach (var id in vivos)
             {
@@ -132,6 +154,7 @@ namespace Pecera.Sim
             foreach (var id in vivos)
             {
                 var top = agenda.Top(id, 1);
+                int hasta; if (retiroHasta.TryGetValue(id, out hasta) && dia <= hasta) continue;          // retirado/hundido: hoy no hace nada
                 if (top.Count == 0 || !rngAg.Chance(0.7)) continue;
                 Ejecuta(personas.Get(id), top[0], ctx);
             }
@@ -144,10 +167,105 @@ namespace Pecera.Sim
                 foreach (var a in Agente.Consolida(p, agenda, 1))
                 {
                     res.AmbicionesCumplidas++;
-                    cronica.Anota(dia, "sueno", nombres[id] + " cumple su ambicion: " + a.Texto, 5);
+                    var sucesora = Agente.Sucesora(p, a, dia);
+                    cronica.Anota(dia, "sueno", nombres[id] + " cumple su ambicion (" + a.Texto + ") y ahora aspira a " + sucesora.Texto, 5);
+                    memoria.Registra(id, "logro", "", "cumpli mi ambicion: " + a.Texto, 6);
                 }
             }
-            if (dia % 30 == 29) personas.Guarda();
+            if (dia % 30 == 29) { personas.Guarda(); EvaluaNormas(); }
+        }
+
+        void AnimoYReflexion(ContextoMundo ctx)
+        {
+            foreach (var id in ids.ToList())
+            {
+                var p = personas.Get(id);
+                double animo = AnimoCalc.Calcula(p, afectos, ids);
+                animoSuma += animo; animoN++;
+                if (animo < Rupturas.Umbral(p)) bajoUmbralN++;
+                var rt = Rupturas.Evalua(p, animo, rngAg, 1);
+                if (rt != Ruptura.Ninguna)
+                {
+                    res.Rupturas++;
+                    string texto = Rupturas.Aplica(rt, p, ctx, rngAg);
+                    if (rt == Ruptura.Retiro) { res.RupturasRetiro++; retiroHasta[id] = dia; }
+                    else if (rt == Ruptura.Arrebato) { res.RupturasArrebato++; cronica.Anota(dia, "ruptura", texto, 3); }
+                    else
+                    {
+                        res.RupturasHundimiento++; retiroHasta[id] = dia + 1; cronica.Anota(dia, "ruptura", texto, 4);
+                        // los que le quieren acuden: el consuelo nace de la relacion, no del azar
+                        string amigo = Planificador.MejorPor(id, ctx, par => par.Afecto, 0.1);
+                        if (amigo != null) agenda.Anade(new Intencion { Pawn = amigo, Tipo = TipoIntencion.Consolar, Objetivo = id, Categoria = "cohesion", Prioridad = 0.9, Texto = nombres[amigo] + " acude a consolar a " + nombres[id], Razon = "amigo hundido", Origen = "reglas" }, dia);
+                    }
+                    memoria.Registra(id, "ruptura", "", texto, 4);
+                }
+                else if (Rupturas.Inspira(p, animo, rngAg, 1)) res.InspiracionesAnimo++;
+
+                if (memoria.ToqueReflexion(id))
+                {
+                    res.Reflexiones++;
+                    res.InsightsGenerados += Agente.Insights(p, memoria, ctx).Count;
+                }
+            }
+        }
+
+        void DirectorDia(ContextoMundo ctx)
+        {
+            double t = Director.Mide(afectos, ids, agenda, cronica, dia);
+            var s = director.Decide(dia, t, afectos, ids, id => personas.Get(id));
+            dirSuma += director.Tension; dirDias++;
+            if (Math.Abs(director.Tension - director.Objetivo(dia)) > 0.2) dirFuera++;
+            if (s == null) return;
+            res.DirectorEventos++;
+            switch (s.Tipo)
+            {
+                case TipoSugerencia.Escandalo:
+                {
+                    res.DirectorEscandalos++;
+                    string receptor = ids[rngAg.Next(ids.Count)];
+                    var f = cfg.Rumores ? secretos.Escandalo(receptor) : null;
+                    if (f != null) { res.Fugas++; cronica.Anota(dia, "director", "Estalla un escandalo: " + nombres[f.Receptor] + " se entera de lo de " + nombres[f.Sujeto], 6); }
+                    break;
+                }
+                case TipoSugerencia.Rivalidad:
+                    res.DirectorRivalidades++;
+                    afectos.Evento(s.Pawns[0], s.Pawns[1], TipoEvento.Competencia, 0.9); afectos.Evento(s.Pawns[1], s.Pawns[0], TipoEvento.Competencia, 0.9);
+                    afectos.Evento(s.Pawns[1], s.Pawns[0], TipoEvento.Agravio, 0.7); afectos.Evento(s.Pawns[0], s.Pawns[1], TipoEvento.Agravio, 0.5);
+                    cronica.Anota(dia, "director", nombres[s.Pawns[0]] + " y " + nombres[s.Pawns[1]] + " compiten por el mismo puesto", 5);
+                    break;
+                case TipoSugerencia.Fiesta:
+                    res.DirectorFiestas++;
+                    // En una fiesta todos conviven con todos: perdon y fiesta entre cada par de invitados.
+                    for (int i = 0; i < s.Pawns.Count; i++) for (int j = i + 1; j < s.Pawns.Count; j++)
+                    {
+                        afectos.Evento(s.Pawns[i], s.Pawns[j], TipoEvento.Fiesta, 0.9); afectos.Evento(s.Pawns[j], s.Pawns[i], TipoEvento.Fiesta, 0.9);
+                        afectos.Evento(s.Pawns[i], s.Pawns[j], TipoEvento.Perdon, 0.25); afectos.Evento(s.Pawns[j], s.Pawns[i], TipoEvento.Perdon, 0.25);
+                    }
+                    cultura.Suceso("comunidad", 1);
+                    cronica.Anota(dia, "director", "El reino celebra una fiesta con " + s.Pawns.Count + " invitados", 5);
+                    break;
+                default:
+                    res.DirectorReconciliaciones++;
+                    afectos.Evento(s.Pawns[0], s.Pawns[1], TipoEvento.Perdon, 0.9); afectos.Evento(s.Pawns[1], s.Pawns[0], TipoEvento.Perdon, 0.9);
+                    cultura.Suceso("clemencia", 1);
+                    cronica.Anota(dia, "director", nombres[s.Pawns[0]] + " y " + nombres[s.Pawns[1]] + " se reconcilian", 5);
+                    break;
+            }
+        }
+
+        void EvaluaNormas()
+        {
+            var ps = ids.Select(id => personas.Get(id)).ToList();
+            var fs = Sociedad.Facciones(afectos, ids, 0.15, 3);
+            Sociedad.AsignaLideres(afectos, fs, id => fichas.Get(id), id => nombres[id]);
+            var lideres = new HashSet<string>(fs.Select(f => f.Lider));
+            foreach (var cambio in normas.Evalua(dia, cultura, ps, id => lideres.Contains(id) ? 3 : 1, hostilesMes))
+            {
+                if (cambio.StartsWith("Se deroga", StringComparison.Ordinal)) res.NormasDerogadas++; else res.NormasAprobadas++;
+                cronica.Anota(dia, "norma", cambio, 6);
+            }
+            hostilesMes = 0;
+            agenda.EnfriaHostil = (int)Math.Round(10 * normas.FactorEnfriaHostil);
         }
 
         void Cuenta()
@@ -167,6 +285,9 @@ namespace Pecera.Sim
         void Habla(Persona a, Persona b, Tema t)
         {
             var c = Dialogo.Resuelve(a, b, t, afectos, rngAg, dia);
+            freno.Anota(a.Id, b.Id, dia);
+            memoria.Registra(a.Id, "conversacion", b.Id, "hable de " + t.ToString().ToLowerInvariant() + " con " + nombres[b.Id] + ": " + c.Efecto, c.Exito ? 1 : 2.5);
+            memoria.Registra(b.Id, "conversacion", a.Id, nombres[a.Id] + " hablo conmigo de " + t.ToString().ToLowerInvariant() + ": " + c.Efecto, c.Exito ? 1 : 2.5);
             res.Conversaciones++; if (c.Exito) res.ConversacionesExito++;
             // El texto es opcional y barato: con presupuesto, el LLM lo escribe; si no, plantilla. El resultado ya esta decidido.
             if (presupuesto.Pide(PrioridadLlm.Conversacion)) { Cuenta(); res.ConversacionesLlm++; }
@@ -182,7 +303,7 @@ namespace Pecera.Sim
             bool hecho = true;
             switch (i.Tipo)
             {
-                case TipoIntencion.Charlar: { obj = Otro(p.Id, obj); if (obj.Length == 0) { hecho = false; break; } var b = personas.Get(obj); Habla(p, b, Dialogo.Elige(p, b, afectos, rngAg)); break; }
+                case TipoIntencion.Charlar: { obj = Otro(p.Id, obj); if (obj.Length == 0 || !freno.Puede(p.Id, obj, dia)) { hecho = false; break; } var b = personas.Get(obj); Habla(p, b, Dialogo.Elige(p, b, afectos, rngAg)); break; }
                 case TipoIntencion.Visitar: { obj = Otro(p.Id, obj); if (obj.Length == 0) { hecho = false; break; } Habla(p, personas.Get(obj), Tema.Saludo); break; }
                 case TipoIntencion.Cortejar: { var b = personas.Get(obj); var c = Dialogo.Resuelve(p, b, Tema.Cortejo, afectos, rngAg, dia); res.Conversaciones++; if (c.Exito) res.ConversacionesExito++; hecho = c.Exito; break; }
                 case TipoIntencion.Consolar: { Habla(p, personas.Get(obj), Tema.Consuelo); break; }
@@ -213,6 +334,7 @@ namespace Pecera.Sim
             }
             agenda.Marca(i, hecho ? EstadoIntencion.Hecha : EstadoIntencion.Fallida);
             if (hecho) res.IntencionesHechas++; else res.IntencionesFallidas++;
+            if (i.Hostil) hostilesMes++;
         }
 
         void CierraIntencionDeEsquema(PropuestaEsquema pr)
@@ -231,8 +353,24 @@ namespace Pecera.Sim
             res.ProgresoMedioAmbiciones = n > 0 ? prog / n : 0;
             res.NecesidadSocialMedia = todas.Count > 0 ? todas.Average(p => p.Needs.Social) : 0;
             double v; res.NecesidadMinimaMedia = todas.Count > 0 ? todas.Average(p => { p.Needs.Mas(out v); return v; }) : 0;
+            var porCat = new Dictionary<string, double[]>();      // categoria -> {n, progreso, cumplidas}
+            foreach (var p in todas) foreach (var a in p.Ambiciones)
+            {
+                double[] vc; if (!porCat.TryGetValue(a.Categoria, out vc)) { vc = new double[3]; porCat[a.Categoria] = vc; }
+                vc[0]++; vc[1] += a.Progreso; if (a.Cumplida) vc[2]++;
+            }
+            res.AmbicionesPorCategoria = string.Join(", ", porCat.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + (int)kv.Value[0] + " (prog " + Json.Num(kv.Value[1] / kv.Value[0]) + ", cumpl " + (int)kv.Value[2] + ")").ToArray());
             res.TiposIntencion = string.Join(", ", tiposVistos.OrderBy(kv => kv.Key.ToString()).Select(kv => kv.Key.ToString().ToLowerInvariant() + "=" + kv.Value).ToArray());
             // Narrativa: las 3 historias mas pesadas de cada temporada con hitos (plantilla; el LLM es opcional).
+            res.AnimoMedio = animoN > 0 ? animoSuma / animoN : 0; res.PorcentajeBajoUmbral = animoN > 0 ? 100.0 * bajoUmbralN / animoN : 0;
+            res.TensionMedia = dirDias > 0 ? dirSuma / dirDias : 0; res.TensionFueraDeBandaPct = dirDias > 0 ? 100.0 * dirFuera / dirDias : 0;
+            res.NormasFinales = string.Join(", ", normas.Activas.Select(n => n.Id).ToArray());
+            var roles = new Dictionary<string, int>();
+            foreach (var kv in agenda.HechasPorPawn) { string r = Roles.De(kv.Value); if (r.Length > 0) { int nr; roles.TryGetValue(r, out nr); roles[r] = nr + 1; } }
+            res.Roles = string.Join(", ", roles.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + kv.Value).ToArray());
+            var etapas = new Dictionary<string, int>();
+            foreach (var a in ids) foreach (var b in ids) { if (a == b) continue; string e = Relaciones.Etapa(afectos, a, b); int ne; etapas.TryGetValue(e, out ne); etapas[e] = ne + 1; }
+            res.Etapas = string.Join(", ", etapas.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + kv.Value).ToArray());
             var hs = new List<Historia>();
             int maxT = 0; foreach (var h in cronica.Hitos) if (cronica.Temporada(h.Dia) > maxT) maxT = cronica.Temporada(h.Dia);
             for (int t = maxT; t >= 0 && t > maxT - 4; t--) hs.AddRange(Narrador.DeTemporada(cronica, t, 3));
@@ -249,6 +387,15 @@ namespace Pecera.Sim
             Fila(sb, "Agentes: ambiciones cumplidas / nuevas por reflexion / progreso medio", res.AmbicionesCumplidas + " / " + res.AmbicionesNuevas + " / " + Json.Num(res.ProgresoMedioAmbiciones));
             Fila(sb, "Agentes: necesidad social media / necesidad mas urgente media", Json.Num(res.NecesidadSocialMedia) + " / " + Json.Num(res.NecesidadMinimaMedia));
             Fila(sb, "Agentes: tipos de intencion ejecutados", res.TiposIntencion);
+            Fila(sb, "Agentes: ambiciones por categoria (n, progreso medio, cumplidas)", res.AmbicionesPorCategoria);
+            Fila(sb, "Animo medio / % de pawns-dia bajo su umbral de ruptura", Json.Num(res.AnimoMedio) + " / " + Json.Num(res.PorcentajeBajoUmbral) + " %");
+            Fila(sb, "Rupturas (retiro / arrebato / hundimiento) e inspiraciones", res.Rupturas + " (" + res.RupturasRetiro + " / " + res.RupturasArrebato + " / " + res.RupturasHundimiento + ") y " + res.InspiracionesAnimo);
+            Fila(sb, "Reflexiones por importancia acumulada / conclusiones", res.Reflexiones + " / " + res.InsightsGenerados);
+            Fila(sb, "Director de drama: eventos (escandalos/rivalidades/fiestas/reconciliaciones)", res.DirectorEventos + " (" + res.DirectorEscandalos + "/" + res.DirectorRivalidades + "/" + res.DirectorFiestas + "/" + res.DirectorReconciliaciones + ")");
+            Fila(sb, "Tension media / % de dias a mas de 0.2 de la curva objetivo", Json.Num(res.TensionMedia) + " / " + Json.Num(res.TensionFueraDeBandaPct) + " %");
+            Fila(sb, "Normas: aprobadas / derogadas / vigentes al final", res.NormasAprobadas + " / " + res.NormasDerogadas + " / " + (res.NormasFinales.Length > 0 ? res.NormasFinales : "(ninguna)"));
+            Fila(sb, "Roles emergentes", res.Roles.Length > 0 ? res.Roles : "(ninguno)");
+            Fila(sb, "Etapas de relacion (pares dirigidos)", res.Etapas);
             Fila(sb, "Narrativa: historias generadas", res.HistoriasGeneradas.ToString(CultureInfo.InvariantCulture));
         }
     }

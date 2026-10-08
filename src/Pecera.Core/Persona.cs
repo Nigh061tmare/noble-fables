@@ -53,6 +53,9 @@ namespace Pecera.Core
         public double Progreso;      // 0..1
         public double Prioridad = 0.5;
         public bool Cumplida;
+        public int Creada;               // dia en que nacio la ambicion
+        // Una ambicion no se cumple de un dia para otro aunque el plan sea corto: plazo corto 20 d, medio 60 d, largo 150 d.
+        public int DiasMinimos { get { return Plazo == Plazo.Corto ? 20 : Plazo == Plazo.Medio ? 60 : 150; } }
 
         public static readonly string[] Categorias = { "casarse", "aprender", "vengar", "enriquecerse", "mandar", "proteger", "descubrir", "paz" };
     }
@@ -63,9 +66,12 @@ namespace Pecera.Core
     {
         public string Id = "", Nombre = "", Oraculo = "";
         public double Extroversion = 0.5, Amabilidad = 0.5, Escrupulosidad = 0.5, Neuroticismo = 0.5, Apertura = 0.5;
+        public int Logros;                  // ambiciones cumplidas a lo largo de su vida
         public double Reputacion = 0.5;     // 0..1, lo bien visto que esta (la recalcula quien tenga el modelo afectivo)
         public Necesidades Needs = new Necesidades();
         public List<Ambicion> Ambiciones = new List<Ambicion>();
+        // Guiones (planes de varios pasos) por categoria de ambicion. NO se persisten: se rehacen al arrancar.
+        public readonly Dictionary<string, Guion> Guiones = new Dictionary<string, Guion>();
 
         public Ambicion Principal()
         {
@@ -90,7 +96,7 @@ namespace Pecera.Core
             var sb = new StringBuilder();
             sb.Append("{\"v\":1,\"id\":\"").Append(Json.Escape(Id)).Append("\",\"nombre\":\"").Append(Json.Escape(Nombre)).Append("\",\"oraculo\":\"").Append(Json.Escape(Oraculo))
               .Append("\",\"e\":").Append(Json.Num(Extroversion)).Append(",\"a\":").Append(Json.Num(Amabilidad)).Append(",\"c\":").Append(Json.Num(Escrupulosidad))
-              .Append(",\"n\":").Append(Json.Num(Neuroticismo)).Append(",\"o\":").Append(Json.Num(Apertura)).Append(",\"rep\":").Append(Json.Num(Reputacion))
+              .Append(",\"n\":").Append(Json.Num(Neuroticismo)).Append(",\"o\":").Append(Json.Num(Apertura)).Append(",\"rep\":").Append(Json.Num(Reputacion)).Append(",\"lg\":").Append(Logros)
               .Append(",\"nd\":").Append(Json.Num(Needs.Descanso)).Append(",\"ns\":").Append(Json.Num(Needs.Social)).Append(",\"ng\":").Append(Json.Num(Needs.Seguridad)).Append(",\"na\":").Append(Json.Num(Needs.Autorrealizacion))
               .Append(",\"amb\":[");
             for (int i = 0; i < Ambiciones.Count; i++)
@@ -98,7 +104,7 @@ namespace Pecera.Core
                 var a = Ambiciones[i];
                 if (i > 0) sb.Append(',');
                 sb.Append("{\"t\":\"").Append(Json.Escape(a.Texto)).Append("\",\"c\":\"").Append(a.Categoria).Append("\",\"ob\":\"").Append(Json.Escape(a.Objetivo))
-                  .Append("\",\"pl\":").Append((int)a.Plazo).Append(",\"pr\":").Append(Json.Num(a.Progreso)).Append(",\"pi\":").Append(Json.Num(a.Prioridad)).Append(",\"ok\":").Append(a.Cumplida ? "true" : "false").Append('}');
+                  .Append("\",\"pl\":").Append((int)a.Plazo).Append(",\"pr\":").Append(Json.Num(a.Progreso)).Append(",\"pi\":").Append(Json.Num(a.Prioridad)).Append(",\"ok\":").Append(a.Cumplida ? "true" : "false").Append(",\"cr\":").Append(a.Creada).Append('}');
             }
             return sb.Append("]}").ToString();
         }
@@ -113,7 +119,7 @@ namespace Pecera.Core
             if (p.Id.Length == 0) return null;
             p.Nombre = Json.Str(d, "nombre"); p.Oraculo = Json.Str(d, "oraculo");
             p.Extroversion = C(Json.Num(d, "e", 0.5)); p.Amabilidad = C(Json.Num(d, "a", 0.5)); p.Escrupulosidad = C(Json.Num(d, "c", 0.5));
-            p.Neuroticismo = C(Json.Num(d, "n", 0.5)); p.Apertura = C(Json.Num(d, "o", 0.5)); p.Reputacion = C(Json.Num(d, "rep", 0.5));
+            p.Neuroticismo = C(Json.Num(d, "n", 0.5)); p.Apertura = C(Json.Num(d, "o", 0.5)); p.Reputacion = C(Json.Num(d, "rep", 0.5)); p.Logros = (int)Json.Num(d, "lg", 0);
             p.Needs.Descanso = C(Json.Num(d, "nd", 0.8)); p.Needs.Social = C(Json.Num(d, "ns", 0.6)); p.Needs.Seguridad = C(Json.Num(d, "ng", 0.8)); p.Needs.Autorrealizacion = C(Json.Num(d, "na", 0.4));
             var l = Json.Lista(d, "amb");
             if (l != null)
@@ -125,7 +131,7 @@ namespace Pecera.Core
                     p.Ambiciones.Add(new Ambicion
                     {
                         Texto = Json.Str(o, "t"), Categoria = cat, Objetivo = Json.Str(o, "ob"), Plazo = pl >= 0 && pl <= 2 ? (Plazo)pl : Plazo.Medio,
-                        Progreso = C(Json.Num(o, "pr", 0)), Prioridad = C(Json.Num(o, "pi", 0.5)), Cumplida = Json.Str(o, "ok") == "true"
+                        Progreso = C(Json.Num(o, "pr", 0)), Prioridad = C(Json.Num(o, "pi", 0.5)), Cumplida = Json.Str(o, "ok") == "true", Creada = (int)Json.Num(o, "cr", 0)
                     });
                 }
             return p;

@@ -171,7 +171,7 @@ namespace Pecera.Tests
             m.Evento("a", "c", TipoEvento.Traicion, 1);
             var plan = Planificador.Planea(a, Mundito.Ctx(m, 1, a, b, c));
             Assert.Contains(plan, x => x.Tipo == TipoIntencion.Cortejar && x.Objetivo == "b");
-            Assert.Contains(plan, x => x.Tipo == TipoIntencion.Vengarse && x.Objetivo == "c");
+            Assert.Contains(plan, x => x.Hostil && x.Objetivo == "c");     // el guion de venganza empieza por intrigar y termina en vengarse
             Assert.True(plan.Count <= 3);
         }
 
@@ -268,7 +268,7 @@ namespace Pecera.Tests
     public class CicloVitalTests
     {
         [Fact]
-        public void Consolidar_restituye_necesidades_y_avanza_ambiciones_hasta_cumplirlas_una_vez()
+        public void Sin_plan_las_ambiciones_solo_avanzan_a_goteo_y_nunca_se_cumplen_solas()
         {
             var ag = new Agenda { MaxAltasPorDia = 99, MaxPorPawn = 99 };
             var p = Mundito.P("p", Mundito.A("aprender")); p.Needs.Autorrealizacion = 0.1; p.Escrupulosidad = 1;
@@ -280,7 +280,8 @@ namespace Pecera.Tests
                 cumplidas += Agente.Consolida(p, ag, 1).Count;
                 foreach (var n in Necesidades.Nombres) Assert.InRange(p.Needs.De(n), 0, 1);
             }
-            Assert.Equal(1, cumplidas); Assert.True(p.Ambiciones[0].Cumplida); Assert.Equal(1, p.Ambiciones[0].Progreso);
+            // Sin guion (plan de varios pasos) el goteo por categoria se detiene en 0.95: cumplir una ambicion exige completar el plan.
+            Assert.Equal(0, cumplidas); Assert.False(p.Ambiciones[0].Cumplida); Assert.Equal(0.95, p.Ambiciones[0].Progreso, 6);
         }
 
         [Fact]

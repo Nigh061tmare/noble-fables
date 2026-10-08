@@ -36,8 +36,9 @@ namespace Pecera.Core
         public int MaxAltasPorDia = 3;
         public int Hoy { get; private set; }
         // Tras cerrar una intencion no se vuelve a proponer la misma durante estos dias (evita el spam de peticiones/venganzas).
-        public int EnfriaPedir = 14, EnfriaHostil = 10, EnfriaCortejo = 3, EnfriaConsolar = 4;
+        public int EnfriaPedir = 14, EnfriaHostil = 10, EnfriaCortejo = 3, EnfriaConsolar = 4, EnfriaCelebrar = 5;
         readonly Dictionary<string, int> cerradas = new Dictionary<string, int>();
+        public readonly Dictionary<string, Dictionary<TipoIntencion, int>> HechasPorPawn = new Dictionary<string, Dictionary<TipoIntencion, int>>();
         public int Hechas { get; private set; }
         public int Fallidas { get; private set; }
 
@@ -102,6 +103,7 @@ namespace Pecera.Core
             if (i.Hostil) return EnfriaHostil;
             if (i.Tipo == TipoIntencion.Cortejar) return EnfriaCortejo;
             if (i.Tipo == TipoIntencion.Consolar) return EnfriaConsolar;
+            if (i.Tipo == TipoIntencion.Celebrar) return EnfriaCelebrar;
             return 0;
         }
 
@@ -110,7 +112,13 @@ namespace Pecera.Core
             bool antesVivo = i.Estado <= EstadoIntencion.EnCurso;
             i.Estado = e;
             if (antesVivo && e >= EstadoIntencion.Hecha && Enfria(i) > 0) cerradas[Clave(i)] = Hoy + Enfria(i);
-            if (antesVivo && e == EstadoIntencion.Hecha) Hechas++;
+            if (antesVivo && e == EstadoIntencion.Hecha)
+            {
+                Hechas++;
+                Dictionary<TipoIntencion, int> d;
+                if (!HechasPorPawn.TryGetValue(i.Pawn, out d)) { d = new Dictionary<TipoIntencion, int>(); HechasPorPawn[i.Pawn] = d; }
+                int n; d.TryGetValue(i.Tipo, out n); d[i.Tipo] = n + 1;
+            }
             if (antesVivo && e == EstadoIntencion.Fallida) Fallidas++;
         }
 

@@ -28,6 +28,7 @@ namespace Pecera.Core
             public List<Episodio> Recientes = new List<Episodio>();
             public List<string> Medio = new List<string>();
             public string Largo = "";
+            public double Acumulada;      // importancia acumulada desde la ultima reflexion (no se persiste)
         }
 
         readonly IStorage disco;
@@ -94,6 +95,102 @@ namespace Pecera.Core
                 Pawn p;
                 if (por.TryGetValue(id, out p)) foreach (var e in p.Recientes) r.Add(e.Texto);
                 return r;
+            }
+        }
+
+        // ---- recuperacion (Generative Agents, Park et al. 2023) ----
+        // Puntua cada recuerdo con recencia (0.5), relevancia (3) e importancia (2), cada componente normalizado a [0,1]
+        // (min-max; si todos son iguales, 0.5), como en reverie/backend_server/persona/cognitive_modules/retrieve.py.
+        // La relevancia usa solapamiento de palabras (no hay embeddings aun; /api/embeddings de Ollama es el siguiente paso).
+        // Incluye los resumenes medio y largo como recuerdos de importancia alta.
+        public List<string> Recupera(string id, string consulta, int n)
+        {
+            lock (cerrojo)
+            {
+                Pawn p;
+                var res = new List<string>();
+                if (!por.TryGetValue(id, out p)) return res;
+                var items = new List<KeyValuePair<string, double[]>>();   // texto -> {recencia, relevancia, importancia}
+                var q = Palabras(consulta);
+                int total = p.Recientes.Count + p.Medio.Count + (p.Largo.Length > 0 ? 1 : 0);
+                int k = 0;
+                if (p.Largo.Length > 0) items.Add(Item(p.Largo, k++, total, q, 6, DecaimientoRecencia));
+                foreach (var m in p.Medio) items.Add(Item(m, k++, total, q, 4, DecaimientoRecencia));
+                foreach (var e in p.Recientes) items.Add(Item(e.Texto, k++, total, q, e.Peso, DecaimientoRecencia));
+                if (items.Count == 0) return res;
+                var rec = Norm(items, 0); var rel = Norm(items, 1); var imp = Norm(items, 2);
+                var punt = new List<KeyValuePair<int, double>>();
+                for (int i = 0; i < items.Count; i++) punt.Add(new KeyValuePair<int, double>(i, 0.5 * rec[i] + 3 * rel[i] + 2 * imp[i]));
+                punt.Sort((a, b) => { int c = b.Value.CompareTo(a.Value); return c != 0 ? c : b.Key.CompareTo(a.Key); });   // empate: el mas reciente
+                for (int i = 0; i < punt.Count && res.Count < n; i++) res.Add(items[punt[i].Key].Key);
+                return res;
+            }
+        }
+
+        public double DecaimientoRecencia = 0.97;
+
+        static KeyValuePair<string, double[]> Item(string texto, int pos, int total, HashSet<string> q, double peso, double decay)
+        {
+            double rec = Math.Pow(decay, total - 1 - pos);                 // el mas nuevo ~1
+            double rel = 0;
+            if (q.Count > 0)
+            {
+                var w = Palabras(texto); int comunes = 0; foreach (var x in w) if (q.Contains(x)) comunes++;
+                rel = w.Count == 0 ? 0 : (double)comunes / Math.Sqrt(w.Count * q.Count);
+            }
+            return new KeyValuePair<string, double[]>(texto, new[] { rec, rel, peso });
+        }
+
+        static double[] Norm(List<KeyValuePair<string, double[]>> items, int c)
+        {
+            double mn = double.MaxValue, mx = double.MinValue;
+            foreach (var it in items) { mn = Math.Min(mn, it.Value[c]); mx = Math.Max(mx, it.Value[c]); }
+            var r = new double[items.Count];
+            for (int i = 0; i < r.Length; i++) r[i] = mx - mn < 1e-12 ? 0.5 : (items[i].Value[c] - mn) / (mx - mn);
+            return r;
+        }
+
+        static HashSet<string> Palabras(string s)
+        {
+            var h = new HashSet<string>();
+            if (string.IsNullOrEmpty(s)) return h;
+            var sb = new StringBuilder();
+            foreach (char c in s.ToLowerInvariant() + " ")
+            {
+                if (char.IsLetterOrDigit(c)) sb.Append(c);
+                else { if (sb.Length >= 4) h.Add(sb.ToString()); sb.Length = 0; }
+            }
+            return h;
+        }
+
+        // ---- reflexion por IMPORTANCIA ACUMULADA (Generative Agents): no se reflexiona "cada dia" sino cuando ha pasado
+        // lo bastante importante desde la ultima vez. Se acumula en Registra() y se consulta/reinicia aqui.
+        public double UmbralReflexion = 12;
+
+        public double ImportanciaAcumulada(string id) { lock (cerrojo) { Pawn p; return por.TryGetValue(id, out p) ? p.Acumulada : 0; } }
+
+        public bool ToqueReflexion(string id)
+        {
+            lock (cerrojo)
+            {
+                Pawn p;
+                if (!por.TryGetValue(id, out p) || p.Acumulada < UmbralReflexion) return false;
+                p.Acumulada = 0;
+                return true;
+            }
+        }
+
+        // Recuerdos recientes agrupados por la otra persona: (con, cuantos, peso total). Para extraer conclusiones.
+        public List<KeyValuePair<string, double>> PesoPorPersona(string id)
+        {
+            lock (cerrojo)
+            {
+                var d = new Dictionary<string, double>(); Pawn p;
+                if (!por.TryGetValue(id, out p)) return new List<KeyValuePair<string, double>>();
+                foreach (var e in p.Recientes) if (e.Con.Length > 0 && e.Tipo != "reflexion") { double v; d.TryGetValue(e.Con, out v); d[e.Con] = v + e.Peso; }
+                var l = new List<KeyValuePair<string, double>>(d);
+                l.Sort((a, b) => { int c = b.Value.CompareTo(a.Value); return c != 0 ? c : string.CompareOrdinal(a.Key, b.Key); });
+                return l;
             }
         }
 
@@ -210,7 +307,7 @@ namespace Pecera.Core
             return p;
         }
 
-        void Aplica(string id, Episodio e) { Get(id).Recientes.Add(e); if (e.T > ultimoT) ultimoT = e.T; }
+        void Aplica(string id, Episodio e) { var p = Get(id); p.Recientes.Add(e); if (e.T > ultimoT) ultimoT = e.T; if (e.Tipo != "reflexion") p.Acumulada += e.Peso; }
 
         void AplicaSum(string id, string texto, long hasta)
         {

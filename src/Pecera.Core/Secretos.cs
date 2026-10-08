@@ -177,6 +177,29 @@ namespace Pecera.Core
             string ak = emisor + "\u001f" + receptor; int n; aristas.TryGetValue(ak, out n); aristas[ak] = n + 1;
         }
 
+        // Escandalo (lo dispara el Director de drama): el secreto mas grave que 'receptor' no conoce sale a la luz por boca de alguien
+        // que ya lo sabia (el sujeto no puede ser el propio receptor). Mismas consecuencias que un chisme normal. null si no hay secretos.
+        public Fuga Escandalo(string receptor)
+        {
+            Secreto mejor = null;
+            foreach (var s in secretos.Values)
+                if (s.Sujeto != receptor && !s.Saben.ContainsKey(receptor) && (mejor == null || s.Gravedad > mejor.Gravedad + 1e-12 || (Math.Abs(s.Gravedad - mejor.Gravedad) <= 1e-12 && s.Id < mejor.Id))) mejor = s;
+            if (mejor == null) return null;
+            var emisores = new List<string>(); foreach (var k in mejor.Saben.Keys) if (k != receptor) emisores.Add(k);
+            emisores.Sort(StringComparer.Ordinal);
+            string emisor = emisores[rng.Next(emisores.Count)];
+            Conocimiento ck = mejor.Saben[emisor];
+            double fid = ck.Fidelidad * rng.Range(0.8, 0.97);
+            string version = Distorsiona(ck.Version, fid, rng);
+            mejor.Saben[receptor] = new Conocimiento { Version = version, Fidelidad = fid, Fuente = emisor, Saltos = ck.Saltos + 1, Cuando = reloj.NowTicks };
+            afectos.Evento(receptor, mejor.Sujeto, TipoEvento.Agravio, 0.6 * mejor.Gravedad * fid);
+            bool seEntera = rng.Chance(0.5 + 0.4 * mejor.Gravedad);
+            if (seEntera && emisor != mejor.Sujeto) afectos.Evento(mejor.Sujeto, emisor, TipoEvento.Traicion, 0.4 + 0.5 * mejor.Gravedad);
+            var f = new Fuga { SecretoId = mejor.Id, Emisor = emisor, Receptor = receptor, Sujeto = mejor.Sujeto, Texto = version, Fidelidad = fid, Saltos = ck.Saltos + 1, SujetoSeEntera = seEntera, Motivo = "escandalo" };
+            fugas.Add(f);
+            return f;
+        }
+
         // Espionaje (F): 'espia' intenta enterarse del secreto de 'objetivo' por su cuenta. El exito
         // depende del carisma del espia y de la locuacidad del objetivo; si el objetivo lo descubre
         // lo toma como una traicion. Devuelve la fuga si hubo exito, o null.

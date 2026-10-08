@@ -11,6 +11,7 @@ namespace Pecera.Sim
     {
         public int Dias = 360, Pawns = 24, Seed = 1;
         public bool Gobierno = true, Esquemas = true, Rumores = true, Afectos = true;
+        public EstiloDirector EstiloDirector = EstiloDirector.Clasico;
         public bool Agentes = true;             // agentes con proposito (requiere Ideas): persona, agenda, plan en lote, conversaciones, narrativa
         public int LlamadasLlmDia = 12, LoteAgentes = 6;    // 12/dia: una llamada cada ~10 s de reloj con dia_segundos=120 (la voz ya usa 1 cada 25 s)
         public bool Ideas = true;               // justicia, sucesion, mentoria, cultura, dialectos, estaciones, suenos, espionaje, deriva
