@@ -47,3 +47,12 @@ Marcas: **VERIFICADO** (ejecutado y visto aqui o en el PC del usuario segun diga
 1. Compilar la v0.3.0 y pegarme errores si los hay. 2. Sesion F11+F10 y devolver `sonda.json`, `sonda_pawn.json`, `sonda_mundo.json`, `verificacion.json`.
 3. Forzar/esperar una peticion real (fase 1). 4. Sesion `agentes=1` de 20 min y devolver `agentes.md`, `historias.md`. 5. Solo con copia de partida: `peticiones_aplicar=1`.
 6. Reenviar `compilar.ps1` si lo modificaste en el PC.
+
+
+## 8. Ampliacion posterior: Fase 3 «realista y autonoma» (v0.4.0)
+Peticion: ampliar la fase 3 tomando como modelo los juegos y simulaciones de ejemplo, investigando en internet. Resultado completo en `docs/INVESTIGACION.md`.
+- Investigado (lectura de codigo/README; arXiv y RimWiki bloqueados por el proxy, asi que los numeros de Generative Agents salen de su CODIGO): Generative Agents, AI Town, alife-sdk, Project Sid, RimWorld (rupturas y narrador), IAUS.
+- Construido en el Core (+ 30 tests, 249 en total): recuperacion de memoria por relevancia, reflexion por importancia acumulada, guiones de varios pasos, ambiciones con duracion y sucesion, animo y rupturas, director de drama, normas colectivas, roles, etapas de relacion, freno de conversacion, curvas IAUS.
+- Cableado en el juego sin escribir: voz con recuperacion, reflexion, normas, director (sugerencias en `agentes.md`), animo informativo.
+- El simulador volvio a corregir el diseno cuatro veces (ambiciones triviales, animo demasiado bajo, director sin actuadores, normas parpadeantes). Detalle en `docs/SIMULACION.md`.
+- **Sigue siendo cierto** que para que jueguen SOLOS hace falta ejecutar las intenciones en el juego (A8–A12) y leer necesidades/familia/habilidades reales (A4–A6): la logica esta, la API no.

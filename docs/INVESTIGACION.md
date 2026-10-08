@@ -21,12 +21,12 @@ lo que no pude leer está marcado.
 
 | Idea de la fuente | Implementación | Resultado medido en el simulador (24 pawns, 360 días, 4 semillas) |
 |---|---|---|
-| Recuperación recencia/relevancia/importancia | `Memoria.Recupera` (relevancia por solapamiento de palabras; incluye resúmenes) y úsala la voz del juego | Test: la relevante gana a la reciente; la importante desempata |
+| Recuperación recencia/relevancia/importancia | `Memoria.Recupera` (relevancia por solapamiento de palabras; incluye resúmenes) y la usa la voz del juego | Test: la relevante gana a la reciente; la importante desempata |
 | Reflexión por **importancia acumulada** | `Memoria.ToqueReflexion` + `Agente.Insights` (conclusiones guardadas como recuerdos de peso 8) | ~470–520 reflexiones/año (≈ una cada 17 días por pawn), 650–720 conclusiones |
 | Planes jerárquicos | `Guiones` (casarse = charlar → cortejar → celebrar → pedir…), empiezan donde está la relación, avanzan con paso exacto y ≥ 2 días entre pasos, se rehacen si el objetivo desaparece o se estancan (15 d) | Las ambiciones dejaron de cumplirse en días: **16–18/año** (antes 80–140) |
 | `chatting_with_buffer` | `FrenoConversacion` (2 días por pareja) | Evita bucles A↔B |
 | Rupturas de RimWorld | `AnimoCalc`, `Rupturas` (umbrales 35/20/5, tiempos medios 10/3/0.7, neuroticismo desplaza ±0.15) + inspiración (animo > 0.85, media 15 d) | Test Monte-Carlo reproduce 9.5 % / 28.3 % / 76 % por día; en la simulación 2–3.5 % de pawns-día bajo el umbral, **13–34 rupturas/año** |
-| Narrador / AI Director | `Director` (3 estilos, curva objetivo, mide tensión con 5 componentes, enfriamiento, banda ±0.12) | Tensión media **0.42–0.45** frente a objetivo medio 0.45; **20–24 %** de días a > 0.2 de la curva; mezcla equilibrada drama (≈ 37) / alivio (≈ 33) |
+| Narrador / AI Director | `Director` (3 estilos, curva objetivo, mide tensión con 5 componentes, enfriamiento, banda ±0.12) | Tensión media **0.42–0.45** frente a objetivo medio 0.45; **20–24 %** de días a > 0.2 de la curva; mezcla de drama (35–46) y alivio (29–33) por año |
 | Normas que se adoptan y cambian (Sid) | `Normas`: paz pública, ojo por ojo, hospitalidad; apoyo ponderado por líderes, histéresis 0.55/0.40, vigencia mínima 90 d, incompatibles entre sí | 2–3 aprobadas y 0–1 derogadas por año (sin parpadeo) |
 | Roles emergentes (Sid) | `Roles.De` a partir de lo HECHO | Aparecen, pero ver limitación 3 |
 | IAUS: curvas e inercia | `Curvas.Logistica` para urgencias; los duplicados refuerzan en vez de reiniciar | Necesidad social media 0.67–0.78 (antes 0.3–0.5) |
