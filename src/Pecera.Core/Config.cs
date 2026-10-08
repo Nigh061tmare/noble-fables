@@ -58,6 +58,7 @@ namespace Pecera.Core
             l.Add(E("influencia_max", "0.25", "Tope del empujon por frase.", true, 0, 1, true, Estado.NoVerificado));
             l.Add(E("influencia_pareja_s", "300", "Segundos de enfriamiento entre empujones de la misma pareja.", true, 30, 86400, true, Estado.NoVerificado));
             l.Add(E("influencia_hora_max", "30", "Tope global de empujones por hora de reloj.", true, 0, 1000, true, Estado.NoVerificado));
+            l.Add(E("panel_inicio", "0", "1: el panel de registro aparece al cargar (F8 lo alterna). No escribe estado.", true, 0, 1, false, Estado.Verificado));
             l.Add(E("burbujas", "1", "1: bocadillos sobre los pawns (solo dibuja, no escribe estado). Sin verificar en partida.", true, 0, 1, false, Estado.NoVerificado));
             // --- capas nuevas internas (no escriben en el juego) ---
             l.Add(E("telemetria", "1", "1: escribe verificacion.json con la evidencia de cada funcion.", true, 0, 1, false, Estado.NoVerificado));
@@ -71,7 +72,8 @@ namespace Pecera.Core
             // --- escrituras de gobierno / esquemas: apagadas ---
             l.Add(E("esquemas", "0", "1: dispara esquemas reales (SchemeManager). ESCRIBE. Requiere esquemas.txt.", true, 0, 1, true, Estado.NoVerificado));
             l.Add(E("esquemas_dia_max", "2", "Tope de esquemas disparados por dia de juego.", true, 0, 20, true, Estado.NoVerificado));
-            l.Add(E("peticiones", "0", "1: resuelve peticiones sin el jugador. ESCRIBE.", true, 0, 1, true, Estado.NoVerificado));
+            l.Add(E("peticiones", "0", "1: el Rey dormido LEE la cola de peticiones y anota su decision interna. Para que ademas las aplique hace falta peticiones_aplicar=1.", true, 0, 1, true, Estado.NoVerificado));
+            l.Add(E("peticiones_aplicar", "0", "1: ADEMAS de leer, aplica Receive()+Complete() a la peticion activa (ESCRIBE). Interruptor explicito: peticiones=1 por si solo solo OBSERVA. Sin verificar en partida: haz copia antes.", true, 0, 1, true, Estado.NoVerificado));
             l.Add(E("peticiones_dia_max", "3", "Tope de peticiones resueltas por dia de juego.", true, 0, 50, true, Estado.NoVerificado));
             l.Add(E("peticiones_veto_s", "30", "Segundos que el jugador tiene para vetar una decision antes de aplicarla.", true, 5, 3600, true, Estado.NoVerificado));
             l.Add(E("investigacion", "0", "1: elige investigacion sola. ESCRIBE.", true, 0, 1, true, Estado.NoVerificado));
@@ -174,6 +176,25 @@ namespace Pecera.Core
         }
 
         public const int VersionActual = 2;
+
+        // Version REAL de un config.txt: 1 si no trae la clave config_version. No se puede usar
+        // Parse(texto).Int("config_version") porque Str() devuelve el DEFECTO del esquema (2) cuando la
+        // clave falta, y un config antiguo parecia ya migrado (bug: influencia=1 sin verificar seguia activa).
+        public static int VersionDe(string texto)
+        {
+            if (texto == null) return 1;
+            foreach (string linea in texto.Split('\n'))
+            {
+                string l = linea.Trim();
+                if (l.Length == 0 || l[0] == '#') continue;
+                int eq = l.IndexOf('=');
+                if (eq <= 0) continue;
+                if (l.Substring(0, eq).Trim().ToLowerInvariant() != "config_version") continue;
+                int v;
+                return int.TryParse(l.Substring(eq + 1).Trim(), out v) ? v : 1;
+            }
+            return 1;
+        }
 
         // Migracion de un config.txt de la version 1 (sin config_version): se conservan los
         // valores de las claves que NO escriben en el juego y se descartan las que si

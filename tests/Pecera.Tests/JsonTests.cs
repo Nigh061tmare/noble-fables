@@ -183,6 +183,7 @@ namespace Pecera.Tests
             Assert.Equal(0, p.Decide("a|b", -5, "empeora"));               // enfriando
             c.AdvanceSeconds(301);
             Assert.Equal(0.1, p.Decide("a|b", -0.4, "perdona"), 6);        // 0.4*0.25, signo invertido
+            Assert.Equal(0, p.Decide("g|h", 0.8, "perdona"));              // nada que perdonar en un delta positivo
             Assert.NotEqual(0, p.Decide("c|d", 1, "empeora"));
             Assert.Equal(0, p.Decide("e|f", 1, "empeora"));                // 3 por hora
             c.AdvanceSeconds(3700);

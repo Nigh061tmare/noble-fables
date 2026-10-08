@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.2.2 (2026-10-08) — traspaso a Opus: se integra el estado real del PC y se endurece el Rey dormido
+
+- Integrado en el repo lo hecho en el PC del usuario (0.2.1 + Rey dormido fases 1 y 2): `Peticiones.cs`, sonda de peticiones, `panel_inicio`,
+  `PeceraConfig.VersionDe`, arreglo de `perdona`. El `.rar` del traspaso llego **danado** (17 ficheros vacios); se conservan las versiones intactas del repo
+  para `compilar.ps1`, `ConfigTests.cs` y `SistemasTests.cs` y se recrearon los tests de `VersionDe`.
+- **Nuevo interruptor `peticiones_aplicar` (0 por defecto).** Antes la fase 2 se activaba sola al ver una peticion en la cola; eso prueba que *leer* funciona,
+  no que `Receive()+Complete()` sea inocuo. Ahora hacen falta tres llaves (interruptor explicito + evidencia + escritura segura). `peticiones=1` solo observa.
+- Corregido: el dry-run del consejo anotaba la cola ENTERA en la cronica cada 30 s; ahora solo las peticiones nuevas.
+
+## 0.2.1 (2026-10-07) — primera verificacion en el PC real (opencode/Claude local)
+
+**VERIFICADO en el PC del usuario (Windows 10, csc.exe de .NET Framework 4, Noble Fates 0.31.5.3):**
+- `compilar.ps1` compila los 29 ficheros con `-warnaserror`, **0 avisos**, 149,5 KB (v0.2.0).
+- 159 tests en verde con un SDK .NET 8.0.425 portatil (`C:\Users\Jose Luis\.pecera-tools\dotnet`), no solo en la nube.
+- `stubs/Pecera.Game.Check` compila sin avisos; el simulador (360 dias, semilla 1) reproduce el informe de la sesion.
+- El plugin carga en el juego real: `Loading [Pecera NobleFates 0.2.0]`, `parcheado: PawnManager.OpinionDelta`, panel listo, sin excepciones.
+
+### Corregido
+- **BUG (grave, no cubierto por los 159 tests): la migracion del config v1 nunca se ejecutaba.**
+  `Estado.Inicia` decidia migrar con `Parse(texto).Int("config_version") < 2`, pero `Str()` devuelve el DEFECTO del esquema
+  (2) cuando la clave falta, asi que un `config.txt` antiguo parecia ya migrado y `influencia=1` (sin verificar, escribe en
+  el juego) seguia activa. Nuevo `PeceraConfig.VersionDe(texto)` (1 si no hay clave) + 3 tests de regresion (162 en total).
+  **VERIFICADO en el juego:** ahora el log dice `config.txt migrado a la version 2`, `influencia=1 -> 0`, y existe `config.v1.bak.txt`.
+
+- **BUG de semantica en `PoliticaInfluencia`:** `perdona` invertia el signo siempre, tambien con delta positivo, y restaba
+  estima a quien acababa de hacer algo bueno. Medido con qwen4b real (12 casos, prompts reales del Core): 3 de 5 eventos
+  positivos devolvian `perdona`. Ahora `perdona` solo actua con delta negativo. Test anadido (162 en total).
+
+### Verificado con el modelo real (sin el juego)
+- Prompts, `OllamaWire` y `ReplicaParser` del Core contra qwen4b-silly en Ollama: 12/12 frases utiles, 12/12 JSON limpio,
+  latencia mediana 1,4 s (max 1,8 s). Cliente de prueba fuera del repo (`%TEMP%\pecera_e2e`).
+
+### Todavia NO VERIFICADO en partida
+Bocadillos, empujon de opinion, reentrada, id estable, memoria entre reinicios, A/B de coste: ver `VERIFICACION_PENDIENTE.md`.
+
 ## 0.2.0 (2026-10-07) — capas, pruebas, simulador e ideas
 
 Todo lo siguiente esta **probado en la nube (tests + simulador)** y es **NO VERIFICADO en partida** salvo lo indicado.

@@ -23,6 +23,7 @@ Las claves marcadas **escribe en el juego** modifican el estado de la partida. M
 | `influencia_max` | `0.25` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | Tope del empujon por frase. |
 | `influencia_pareja_s` | `300` | 30 .. 86400 | NO VERIFICADO - **escribe en el juego** | Segundos de enfriamiento entre empujones de la misma pareja. |
 | `influencia_hora_max` | `30` | 0 .. 1000 | NO VERIFICADO - **escribe en el juego** | Tope global de empujones por hora de reloj. |
+| `panel_inicio` | `0` | 0 .. 1 | VERIFICADO | 1: el panel de registro aparece al cargar (F8 lo alterna). No escribe estado. |
 | `burbujas` | `1` | 0 .. 1 | NO VERIFICADO | 1: bocadillos sobre los pawns (solo dibuja, no escribe estado). Sin verificar en partida. |
 | `telemetria` | `1` | 0 .. 1 | NO VERIFICADO | 1: escribe verificacion.json con la evidencia de cada funcion. |
 | `memoria` | `1` | 0 .. 1 | NO VERIFICADO | 1: memoria episodica por pawn en disco (memoria.jsonl). |
@@ -34,7 +35,8 @@ Las claves marcadas **escribe en el juego** modifican el estado de la partida. M
 | `cronica` | `1` | 0 .. 1 | NO VERIFICADO | 1: cronica del reino en cronica.md. |
 | `esquemas` | `0` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | 1: dispara esquemas reales (SchemeManager). ESCRIBE. Requiere esquemas.txt. |
 | `esquemas_dia_max` | `2` | 0 .. 20 | NO VERIFICADO - **escribe en el juego** | Tope de esquemas disparados por dia de juego. |
-| `peticiones` | `0` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | 1: resuelve peticiones sin el jugador. ESCRIBE. |
+| `peticiones` | `0` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | 1: el Rey dormido LEE la cola de peticiones y anota su decision interna. Para que ademas las aplique hace falta peticiones_aplicar=1. |
+| `peticiones_aplicar` | `0` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | 1: ADEMAS de leer, aplica Receive()+Complete() a la peticion activa (ESCRIBE). Interruptor explicito: peticiones=1 por si solo solo OBSERVA. Sin verificar en partida: haz copia antes. |
 | `peticiones_dia_max` | `3` | 0 .. 50 | NO VERIFICADO - **escribe en el juego** | Tope de peticiones resueltas por dia de juego. |
 | `peticiones_veto_s` | `30` | 5 .. 3600 | NO VERIFICADO - **escribe en el juego** | Segundos que el jugador tiene para vetar una decision antes de aplicarla. |
 | `investigacion` | `0` | 0 .. 1 | NO VERIFICADO - **escribe en el juego** | 1: elige investigacion sola. ESCRIBE. |

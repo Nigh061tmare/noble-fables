@@ -202,7 +202,10 @@ namespace Pecera.Core
         {
             int signo = 0;
             if (actitud == "empeora") signo = Math.Sign(delta);
-            else if (actitud == "perdona") signo = -Math.Sign(delta);
+            // "perdona" suaviza un sentimiento NEGATIVO. Con un delta positivo no hay nada que perdonar: antes
+            // invertia el signo y restaba estima a quien acababa de hacer algo bueno (medido con qwen4b real:
+            // 3 de 5 eventos positivos devolvian "perdona").
+            else if (actitud == "perdona" && delta < 0) signo = 1;
             if (signo == 0 || Max <= 0) return 0;
             long ahora = clock.NowTicks;
             lock (cerrojo)

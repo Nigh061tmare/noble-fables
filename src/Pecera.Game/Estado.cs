@@ -57,7 +57,7 @@ namespace PeceraNF
             {
                 Escribe(ruta, PeceraConfig.RenderDefault());
             }
-            else if (PeceraConfig.Parse(texto).Int("config_version") < PeceraConfig.VersionActual)
+            else if (PeceraConfig.VersionDe(texto) < PeceraConfig.VersionActual)
             {
                 var cambios = new List<string>();
                 File.Copy(ruta, Path.Combine(datos, "config.v1.bak.txt"), true);
@@ -123,6 +123,8 @@ namespace PeceraNF
             Ev.Criterio("afectos_modelo", 20, 0);
             Ev.Criterio("rumor_fuga", 1, 0);
             Ev.Criterio("sonda_pawn", 1, 0);
+            Ev.Criterio("peticion_capturada", 1, 0);   // Rey dormido: vimos una peticion real en cola (fase 1)
+            Ev.Criterio("peticion_aplicada", 1, 0);    // Rey dormido: aplicamos Complete() real (fase 2)
             Ev.Criterio("informe_escrito", 1, 0);
         }
 

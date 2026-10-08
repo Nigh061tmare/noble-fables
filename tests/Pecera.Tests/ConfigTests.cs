@@ -89,6 +89,28 @@ namespace Pecera.Tests
         }
 
         [Fact]
+        public void VersionDe_distingue_un_config_antiguo_de_uno_migrado()
+        {
+            // BUG real (hallado en el PC del usuario): Parse(texto).Int("config_version") devolvia el DEFECTO (2)
+            // cuando la clave faltaba, y un config v1 con influencia=1 nunca se migraba.
+            Assert.Equal(1, PeceraConfig.VersionDe("modelo=x\ninfluencia=1\n"));
+            Assert.Equal(1, PeceraConfig.VersionDe(null));
+            Assert.Equal(1, PeceraConfig.VersionDe("config_version=abc\n"));
+            Assert.Equal(2, PeceraConfig.VersionDe("# c\nconfig_version=2\n"));
+            Assert.Equal(2, PeceraConfig.Parse("modelo=x").Int("config_version"));   // el trampa: el defecto engana
+            Assert.True(PeceraConfig.VersionDe(PeceraConfig.RenderDefault()) >= PeceraConfig.VersionActual);
+        }
+
+        [Fact]
+        public void Peticiones_solo_observa_hasta_que_se_pide_aplicar_explicitamente()
+        {
+            var c = PeceraConfig.Parse("peticiones=1\n");
+            Assert.False(c.PuedeEscribir("peticiones_aplicar"));
+            Assert.True(PeceraConfig.Parse("peticiones_aplicar=1\n").PuedeEscribir("peticiones_aplicar"));
+            Assert.False(PeceraConfig.Parse("peticiones_aplicar=1\nmodo=observador\n").PuedeEscribir("peticiones_aplicar"));
+        }
+
+        [Fact]
         public void Una_escritura_ya_apagada_o_con_su_valor_por_defecto_no_se_reporta()
         {
             var cambios = new System.Collections.Generic.List<string>();

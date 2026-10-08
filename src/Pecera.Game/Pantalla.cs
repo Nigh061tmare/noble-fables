@@ -46,7 +46,8 @@ namespace PeceraNF
 
     public static class Pantalla
     {
-        public static bool BurbujasOn = true;   // F7 la alterna en caliente; el defecto sale de config.txt (burbujas)
+        public static bool BurbujasOn = true;
+        public static bool MuestraInicio = false;   // F7 la alterna en caliente; el defecto sale de config.txt (burbujas)
 
         class Bub
         {
@@ -171,7 +172,7 @@ namespace PeceraNF
                     Debug.Log("[Pecera] burbujas " + (BurbujasOn ? "on" : "off"));
                 }
                 if (Input.GetKeyDown(KeyCode.F10)) Plugin.EscribeInforme("tecla F10");
-                if (Input.GetKeyDown(KeyCode.F11)) Sonda.Tipos();
+                if (Input.GetKeyDown(KeyCode.F11)) { Sonda.Tipos(); Sonda.Peticiones(); }
                 if (Input.GetKeyDown(KeyCode.F8))
                 {
                     Visible = !Visible;
@@ -192,6 +193,12 @@ namespace PeceraNF
             }
 
             void OnGUI() { Dibuja(); }
+
+            void Start()
+            {
+                Visible = MuestraInicio;
+                Debug.Log("[Pecera] panel_inicio=" + (MuestraInicio ? "1" : "0") + " (F8 para alternar)");
+            }
         }
 
         static void Estilos()

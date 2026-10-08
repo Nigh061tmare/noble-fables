@@ -36,13 +36,17 @@ namespace PeceraNF
                 Logger.LogInfo("[Pecera] activo=0: mod inerte (solo fps_log si esta encendido)");
                 return;
             }
-            foreach (string k in new[] { "esquemas", "peticiones", "investigacion", "planos", "misiones" })
+            foreach (string k in new[] { "esquemas", "investigacion", "planos", "misiones" })
                 if (Estado.Cfg.Bool(k))
                 {
                     string msg = k + "=1 pero su adaptador al juego esta PENDIENTE de confirmar firmas (ver sonda.json): no hace nada";
                     Estado.Avisos.Add(msg);
                     Logger.LogWarning("[Pecera] " + msg);
                 }
+            if (Estado.Cfg.Bool("peticiones") && !Estado.Cfg.Bool("peticiones_aplicar"))
+                Logger.LogInfo("[Pecera] peticiones=1: el Rey dormido solo OBSERVA (peticiones_aplicar=0).");
+            if (Estado.Cfg.Bool("peticiones_aplicar"))
+                Logger.LogWarning("[Pecera] peticiones_aplicar=1: aplicara Receive()+Complete() a peticiones reales tras " + Estado.Cfg.Int("peticiones_veto_s") + " s de veto. NO VERIFICADO: ¿hiciste copia de la partida?");
             _h = new Harmony("pecera.nf");
             try { _h.PatchAll(); }
             catch (Exception e) { Logger.LogError("[Pecera] PatchAll fallo: " + e); Estado.Ev.Fail("hook_opinion", "PatchAll: " + e.Message); }
@@ -73,6 +77,7 @@ namespace PeceraNF
                 _panel = true;
                 Pantalla.Instala();
                 Pantalla.BurbujasOn = Estado.Cfg.Bool("burbujas");
+        Pantalla.MuestraInicio = Estado.Cfg.Bool("panel_inicio");
                 Logger.LogInfo("[Pecera] panel listo (F7 bocadillos, F8 panel, F9 limpiar, F10 informe, F11 sonda)");
                 if (Estado.Activo)
                 {
@@ -101,6 +106,7 @@ namespace PeceraNF
             {
                 _t30 = 0f;
                 Persiste();
+                Peticiones.Observa();   // solo lectura + dry-run (Rey dormido, fase 1)
                 long ahora = Estado.Reloj.NowTicks;
                 if (ahora - _ultimoInforme > Estado.Cfg.Num("informe_min") * TimeSpan.TicksPerMinute) EscribeInforme("periodico");
             }

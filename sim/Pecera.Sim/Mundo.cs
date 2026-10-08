@@ -70,7 +70,19 @@ namespace Pecera.Sim
         readonly Compuerta compuerta;
         readonly Consejo consejo;
         readonly MotorEsquemas motor = new MotorEsquemas();
-        readonly CatalogoEsquemas catalogo = CatalogoEsquemas.Parse("Insultar|seguro|hostil\nDifamar|seguro|hostil\nCortejar|seguro|amistoso\nAsesinar|prohibido|hostil\n");
+        readonly CatalogoEsquemas catalogo = CatalogoEsquemas.Parse(
+    "Insultar|seguro|hostil\n" +
+    "Difamar|seguro|hostil\n" +
+    "SabotearFestin|seguro|hostil\n" +
+    "Desairar|seguro|hostil\n" +
+    "Cortejar|seguro|amistoso\n" +
+    "Festejar|seguro|amistoso\n" +
+    "Aliarse|seguro|amistoso\n" +
+    "Felicitacion|seguro|amistoso\n" +
+    "Tregua|seguro|amistoso\n" +
+    "Asesinar|prohibido|hostil\n" +
+    "Exiliar|prohibido|hostil\n" +
+    "Guerra|prohibido|hostil\n");
         readonly MetasReino metas = new MetasReino();
         readonly Cronica cronica = new Cronica();
         readonly Costumbres costumbres = new Costumbres();

@@ -65,10 +65,39 @@ Prueba de la consola (30 s): en `pecera_datos/consola.txt` escribe `estado` y es
 
 ## NO se puede probar todavia (necesita que escriba antes los adaptadores, con tus sondas)
 
-- **Esquemas** (`esquemas=1`), **peticiones** (`peticiones=1`), **investigacion**, **planos**, **misiones**:
+- **Esquemas** (`esquemas=1`), **investigacion**, **planos**, **misiones**:
   la logica de decision esta hecha y probada en el simulador (ver `docs/SIMULACION.md`), pero los adaptadores al juego estan
   marcados «firma pendiente de confirmar» y **no hacen nada** hasta que me devuelvas `sonda.json` (paso 4).
   Con esos interruptores a 1 hoy **no ocurre nada** (el mod lo avisa en el log al arrancar). No es un fallo: es lo pendiente.
+
+## Rey dormido (punto G) — FASE 1 (ya escrita, solo observa) y FASE 2 (instalada, latente)
+
+Con las firmas confirmadas por tu `sonda.json` escribi el adaptador de peticiones en dos fases
+(`src/Pecera.Game/Peticiones.cs` + el punto unico de escritura en `Acciones.cs`). Ambas estan
+compiladas e instaladas (DLL en `plugins/`, tamano ~158 KB).
+
+**FASE 1 (solo lectura + dry-run, SIEMPRE activa con `peticiones=1`):**
+- Cada 30 s lee `PetitionManager.Instance.petitionQueue` y la peticion activa (`petition`).
+- Cada peticion NUEVA la apunta en `memoria.jsonl` y deja evidencia `peticion_capturada`.
+- Evalua la peticion con el consejo y anota la decision en `cronica.md`/`informe.md` (interna).
+
+**FASE 2 (escribir la decision con `Complete()`, INACTIVA salvo que lo pidas con `peticiones_aplicar=1`):**
+- `GobiernoDisponible` pasa a `true` SOLO con las TRES llaves: `peticiones_aplicar=1` (explicito, **apagado por defecto**), `peticion_capturada ok>=1` (fase 1 con evidencia) y escritura segura.
+  Leer la cola no prueba que `Complete()` sea inocuo (podria saltarse el dialogo/pasos de la peticion), por eso `peticiones=1` por si solo **solo observa**.
+- Cuando hay una peticion ACTIVA no completa, la `Compuerta` propone resolverla (veto en asistente,
+  sin veto en dios). Pasado `peticiones_veto_s`, se aplica en el hilo principal: `Receive()` +
+  `Complete()` si no estaba completa, con evidencia `peticion_aplicada`. Todo en `Acciones.cs`
+  (respeta config `PuedeEscribir`, modo observador, y `EscrituraSegura`).
+
+**Como verificar:**
+1. **Copia de la partida.** `config.txt`: `peticiones=1` (deja `modo=asistente`) y **reinicia**. Para la FASE 1 basta eso. Para la FASE 2 anade `peticiones_aplicar=1`.
+2. Juega con la partida cargada hasta que aparezca una peticion activa (audiencia, obra...).
+3. Log cada 30 s: `[Pecera] peticiones: cola=N activa=... nuevos=M`. Cuando `activa=<tipo>` y un
+   `nuevos=1`, mira `verificacion.json`: `peticion_capturada ok=1` **= FASE 1 verificada**.
+4. **SIN reiniciar**: cuando `GobiernoDisponible` pasa a true en vivo, la SIGUIENTE peticion activa
+   se resolvera sola (veras `peticion_aplicada ok=1` en `verificacion.json`) **= FASE 2 verificada**.
+5. Si en 15-20 min ves siempre `activa=no`, la partida no genera peticiones a ese ritmo; dinos y
+   forzamos una con una accion del reino.
 
 ## Que me devuelves en total
 
