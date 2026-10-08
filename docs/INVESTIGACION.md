@@ -49,3 +49,26 @@ lo que no pude leer está marcado.
 | Bus de eventos tipado | El acoplamiento actual (Estado + Gancho + Mente) es manejable; no compensa el cambio todavía |
 | Conversaciones multi-turno largas con LLM | Cuesta GPU y el resultado ya se decide por reglas; el texto es opcional |
 | Hitos de «civilización» como benchmark | Parcialmente cubierto con roles, normas, cultura y crónica; falta definir metas medibles en el juego real |
+
+## 5. v0.5 «Vida»: segunda ronda de investigación (búsquedas web, 2026-10-08)
+
+| Fuente | Qué dice (comprobado en la búsqueda) | Qué se tomó |
+|---|---|---|
+| Crusader Kings III — [Dev Diary #31 «A Stressful Situation»](https://admin-forum.paradoxplaza.com/forum/developer-diary/ck3-dev-diary-31-a-stressful-situation.1399764/page-2) | El estrés mide el estado mental; se acumula por niveles (1 leve … 3 grave); al pasarse hay una *mental break* cuyo **tipo depende de los rasgos** y cuya gravedad sigue al nivel; la estrategia es gestionarlo con *coping mechanisms*, no evitarlo | `Estres`: niveles 100/200/300, coste por actuar contra el carácter, crisis al cruzar nivel elegida por el carácter, liberación de 80 |
+| Dwarf Fortress — [Memory (thought)](https://dwarffortresswiki.org/index.php/Memory_(thought)) | 8 huecos de memoria a corto plazo y 8 a largo; tras un año se promueve si es más fuerte; **solo la emoción más fuerte de cada categoría** ocupa hueco; revivir recuerdos cambia el estrés y puede **cambiar la personalidad** | `RecuerdosFuertes` (8 + 8, uno por tipo, promoción a 60 días porque el año de juego es más corto), revividos cada ~10 días, deriva de neuroticismo/amabilidad acotada |
+| The Sims — [«The Genius AI Behind The Sims» (GMTK)](https://gameindustrylibrary.com/documents/gmtk-the-genius-ai-behind-the-sims) | Los objetos «anuncian» lo que ofrecen; el Sim pondera por sus motivos y **elige al azar entre las mejores** para no parecer un robot | `Eleccion.Elige` (softmax con temperatura 0.12 sobre el top 3) |
+| Concordia (Google DeepMind) — [repositorio](https://github.com/google-deepmind/concordia), [informe técnico](https://arxiv.org/pdf/2507.08892) | Un *Game Master* convierte las intenciones en lenguaje natural de los agentes en resultados plausibles del entorno | `MaestroDeJuego`: resuelve por dentro lo social; lo que necesita el juego se marca `RequiereJuego` y pasa por sus interruptores |
+| Voyager — [arXiv 2305.16291](https://arxiv.org/pdf/2305.16291) | Currículo automático que propone tareas según lo que el agente ya domina + biblioteca de habilidades verificadas | `Experiencia` (Beta(1,1) por tipo, factor 0.75–1.25) y `Agente.Sucesora` con dos caminos elegidos por carácter y destreza |
+| Tus 300 eventos reales de opinión (`opinion_*.jsonl`) | 93 % por rasgo, 82 % negativos, percentiles de \|delta\| | `Calibracion` y `Prejuicios` |
+
+**Resultado medido** (24 pawns + población viva, 360 días, semillas 1–4; detalle en `docs/SIMULACION.md`): 7–20 crisis por estrés al año (5–13 arrebatos),
+estrés medio final 13–18 sobre 400, 4–7 nacimientos y 3–7 muertes por año, prejuicio medio 0.15–0.18 → 0.23–0.29, el favorecido por el soberano pasa de 2–4 a 10–17
+peticiones aprobadas, persistencia idéntica en ida y vuelta.
+
+**Lo que esto NO resuelve (honesto):**
+1. Los pawns del juego siguen sin **ejecutar** acciones nuevas en el mundo: el maestro resuelve por dentro (afectos del mod, crónica, bocadillos). Hacer que pidan, intriguen o trabajen
+   de verdad depende de A8–A12 (firmas de peticiones/esquemas confirmadas con la sonda) y de interruptores que hoy están a 0.
+2. Sin `ganchos.txt` confirmado, en el juego la vida solo oye **opiniones**: duelo, bodas y nacimientos quedan probados en tests y simulador, no en partida.
+3. Hundimientos por estrés siguen sin aparecer en el simulador (nadie llega a nivel 3 en un año). Los arrebatos sí.
+4. «El jugador simulado veta menos en la 2.ª mitad» no siempre se cumple en bruto: los vetos residuales son ruido de fondo (3 %) sobre otros tipos; lo que sí cae a cero
+   es lo que vetaba de verdad (Difamar, silenciado tras 3 vetos).

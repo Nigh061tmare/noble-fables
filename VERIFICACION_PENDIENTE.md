@@ -122,3 +122,16 @@ compiladas e instaladas (DLL en `plugins/`, tamano ~158 KB).
 - `verificacion.json`: además `agentes_reflexion` ≥ 1 (la importancia acumulada dispara conclusiones).
 - Tras unos días de juego, la crónica (`cronica.md`) debe mezclar «cumple su ambición…», «El director sugiere…» y, si cambian los valores del reino, una norma.
 - `director_estilo=ninguno` apaga las sugerencias; `calmo` / `caotico` cambian el ritmo.
+
+
+## Vida (v0.5.0) — `vida=1`, `vida_maestro=1`, `ordenes=1` por defecto (NO escriben en el juego)
+
+Requiere `agentes=1`. Juega 20–30 min y luego:
+1. `agentes.md`: línea **Vida** (prejuicio medio por grupo, lo aprendido de tus vetos, órdenes entendidas, sucesos oídos) y, por pawn, «Estrés N (nivel k)» y «Le marcó: …».
+2. `verificacion.json`: `vida_maestro` ≥ 5 (conversaciones internas sin excepciones), `mundo_persistido` ≥ 1; `vida_crisis` puede quedar sin datos en una sesión corta (es normal).
+3. Debes ver **bocadillos de conversación en los dos pawns** que «charlan» (máx. `vida_maestro_dia` al día). Si molestan: `agentes_burbujas=0`.
+4. Escribe en `directriz.txt`: `Quiero paz en el reino, favorece a <nombre de un pawn> y haced una fiesta.` En ≤ 5 s la crónica debe decir «El soberano ordena: …».
+5. Cierra y vuelve a abrir el juego: `mundo.jsonl` debe existir y la crónica/agenda deben seguir ahí (no empezar de cero).
+6. **Ganchos (opcional, apagado):** pulsa F11 → `ganchos.sugeridos.txt`. Si ves un método que claramente es «morir», «casarse» o «nacer», cópialo SIN `#` a
+   `ganchos.txt`, pon `ganchos=1`, reinicia y, cuando pase eso en la partida, `vida_suceso` debe sumar en `verificacion.json`. Si aparece un fallo, desactívalo y mándamelo.
+7. Devuélveme `agentes.md`, `cronica.md`, `verificacion.json`, `mundo.jsonl` (no tiene secretos tuyos: solo el estado del mod) y `ganchos.sugeridos.txt`.

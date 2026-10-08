@@ -4,11 +4,13 @@ Mod de **Noble Fates** (Unity Mono 2019.4, BepInEx 5.4.23.5 + Harmony) que da vo
 personajes con un LLM local (Ollama). Meta: una simulacion social **autonoma**: los habitantes viven, se relacionan, se
 entreran de secretos, forman bandos y el reino crece solo, con el jugador como mano opcional.
 
-> **Estado honesto (v0.2.0).** Toda la *logica* esta hecha y probada aqui (mas de 240 tests + simulador). **Nada de lo nuevo se ha
+> **Estado honesto (v0.5.0).** Toda la *logica* esta hecha y probada aqui (mas de 240 tests + simulador). **Nada de lo nuevo se ha
 > visto funcionar dentro del juego.** El hook y las frases de v0.1 estaban verificados en partida; bocadillos, empujon de
 > opinion, memoria persistente, modelo afectivo, rumores y consola son **NO VERIFICADOS**. Los adaptadores de esquemas,
 > peticiones, investigacion, planos y misiones estan **pendientes de confirmar firmas** y no hacen nada todavia.
 > v0.4.0: los pawns tienen ambiciones, planes de varios pasos, animo, normas y un director de drama (`agentes=1`, solo observa). Investigacion: `docs/INVESTIGACION.md`. Plan: `docs/PLAN_OPUS.md`.
+> v0.5.0 «Vida»: estrés y crisis según carácter (CK3), recuerdos que marcan (Dwarf Fortress), prejuicio de grupo calibrado con tus 300 eventos reales,
+> maestro de juego que resuelve conversaciones por dentro, el reino aprende de tus vetos, órdenes en lenguaje natural y estado que sobrevive al reinicio (`mundo.jsonl`). Sigue sin escribir en el juego.
 > Lee `VERIFICACION_PENDIENTE.md`: son 2 sesiones de juego para cerrar casi todo.
 
 ## Instalacion reproducible
@@ -36,10 +38,12 @@ antiguo dejando copia). **Todo lo que escribe en el estado del juego viene apaga
 | F7 | bocadillos on/off |
 | F8 / F9 | panel de registro / limpiar |
 | F10 | escribe `informe.md`, `cronica.md`, `grafo.dot/json` y **`verificacion.json`** |
-| F11 | sonda de solo lectura: `sonda.json`, `sonda_pawn.json`, `esquemas.sugeridos.txt` |
+| F11 | sonda de solo lectura: `sonda.json`, `sonda_pawn.json`, `esquemas.sugeridos.txt`, `ganchos.sugeridos.txt` |
 
 * `config.txt`: referencia completa en [`docs/CONFIG.md`](docs/CONFIG.md) (generada del codigo).
-* `directriz.txt`: lo que quieres que pase. Global, o por `[faccion:Nombre]` y `[pawn:Nombre]`. Se relee sola.
+* `directriz.txt`: lo que quieres que pase. Global, o por `[faccion:Nombre]` y `[pawn:Nombre]`. Se relee sola. Con `ordenes=1` entiende además
+  «quiero paz», «ojo por ojo», «favorece a Ana», «haced una fiesta», «quiero drama» / «quiero calma».
+* `ganchos.txt` (opcional, `ganchos=0`): `tipo = Clase.Metodo` para que la vida del mod oiga muertes, bodas o nacimientos reales (solo lectura).
 * `consola.txt`: comandos (`estado`, `pendientes`, `veta <id>`, `modo observador|asistente|dios`, `dir ...`, `quita ...`, `deshacer`).
   Se ejecutan solos; respuesta en `consola_salida.txt`.
 * `modo=observador` es un interruptor general: **ninguna** escritura al juego, pase lo que pase.

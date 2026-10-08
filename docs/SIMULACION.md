@@ -77,3 +77,22 @@ Por qué cambió el diseño al medir: (1) los planes de 3 pasos se completaban e
 (2) con ánimo = 0.6·necesidades + 0.3·clima el 40 % de los pawns-día estaba bajo su umbral → suelo de contento 0.3; (3) el director no movía la tensión (medía solo cuota global de pares) → añadir la intensidad de los 5 peores rencores
 y eventos más fuertes; (4) las normas parpadeaban → margen de 0.10 entre normas rivales y vigencia mínima de 90 días.
 Limitaciones (roles casi todos «mediador», hundimientos casi inexistentes): `docs/INVESTIGACION.md` §3.
+
+
+## v0.5 «Vida» — 24 pawns + población viva, 360 días, semillas 1–4
+
+| Métrica | Resultado | Criterio del test |
+|---|---|---|
+| Nacimientos / muertes / llegadas / bodas al año | 4–7 / 3–7 / 3 / 0–3 | nacimientos + llegadas > 0 y muertes > 0 |
+| Crisis por estrés al año (arrebatos / hundimientos) | 7–20 (5–13 / 0) | entre 3 y 60 (semilla 1) |
+| Estrés medio final (0–400) | 13–18 | — |
+| Recuerdos fuertes revividos | 359–500 | — |
+| Prejuicio de grupo, hostilidad media día 30 → final | 0.14–0.18 → 0.23–0.29 | > 0 y < 0.6 |
+| Propuestas silenciadas por lo aprendido del jugador | 65–132 | > 0 |
+| Órdenes: favorecido, aprobadas antes → después | 2–4 → 10–17 | después > antes |
+| Persistencia (líneas / ida y vuelta idéntica) | 1540–1680 / sí | idéntica |
+| Rupturas de ánimo al año | 27–68 | (sube respecto a 0.4: el estrés y el duelo pesan) |
+| Tensión media / días fuera de banda | 0.43–0.44 / 21–22 % | 0.30–0.60 / ≤ 35 % |
+
+Calibración hecha al medir: con la disipación inicial (3–8/día) el estrés nunca pasaba de 2 y no había crisis; con fracasos a 4–12 de estrés salían ~100 crisis/año.
+Quedó en disipación 1–3/día, fracaso 1–6, duelo hasta 90 y herida hasta 50 (multiplicados por 0.6–1.4 según neuroticismo).

@@ -86,3 +86,17 @@ Plugin.Update (cada dia de juego) ──► Mente.Tick  [hilo principal]
 ```
 Reglas: `Agenda`, `Personas` y el resto del estado mutable son del hilo principal; la hebra de LLM solo recibe strings y devuelve un string.
 `PresupuestoLlm` y los techos por prioridad evitan que la planificacion se coma a la voz. Ningun camino escribe en el juego.
+
+## v0.5 «Vida» (piezas nuevas)
+
+| Pieza | Capa | Hilo | Escribe en el juego |
+|---|---|---|---|
+| `Eventos.cs` (`BusEventos`, `Vida.Conecta`) | Core | principal | no |
+| `Psique.cs` (`RecuerdosFuertes`, `Estres`, `Experiencia`, `Eleccion`, `Preferencias`, `Psique.Dia`) | Core | principal | no |
+| `Calibracion.cs` (`Calibracion`, `Prejuicios`) | Core | principal | no |
+| `Maestro.cs` (`MaestroDeJuego`) | Core | principal | no (marca `RequiereJuego` lo que no es suyo) |
+| `Ordenes.cs`, `Ganchos.cs`, `Persistencia.cs` (`EstadoSocial` → `mundo.jsonl`) | Core | principal | no |
+| `Observadores.cs` (postfix genérico de `ganchos.txt`) | Game | lee en el hilo del juego, publica vía `Principal` | no (parchea, solo lee) |
+
+Flujo: `Gancho` (opinión) y `Observadores` (sucesos) → `Estado.Eventos` → `Vida` (duelo, bodas, estrés…) → `Mente.Tick` (psique de los días transcurridos, maestro, crisis) → `agentes.md`, `cronica.md`, bocadillos.
+`Compuerta.AlDecidir` → `Principal` → `Preferencias`. `Plugin.Persiste` y `Mente` cada 10 rondas → `Estado.GuardaMundo()`.

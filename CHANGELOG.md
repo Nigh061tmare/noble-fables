@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.0 (2026-10-08) — «Vida»: los pawns viven por dentro (CK3, Dwarf Fortress, The Sims, Concordia, Voyager + datos reales)
+
+Todo **HECHO-NUBE** (274 tests, simulador, stubs con 0 avisos) y **NO VERIFICADO en partida**. **Nada escribe en el estado del juego**: todo es interno
+(modelo afectivo, agenda, crónica, bocadillos). Fuentes: `docs/INVESTIGACION.md` §5.
+- **Calibración con tus 300 eventos reales** (`Calibracion`): la magnitud de un cambio de opinión se mapea por percentiles reales (p50 0.72, p90 1.96, p99 2.36),
+  y el 93 % de eventos «por rasgo» se modela como lo que es: **prejuicio de grupo** (`Prejuicios`), aprendido de los propios motivos del juego («es Orco», «está Malo»),
+  que decae (τ 120 d), no cuenta dentro del propio grupo, se atenúa a la mitad con la norma de tolerancia y sesga con quién se acerca cada pawn.
+- **Psique** (`Psique.cs`): recuerdos fuertes 8 + 8 por categoría con promoción a largo plazo y revividos que estresan o reconfortan y derivan la personalidad
+  (±0.2 máx., Dwarf Fortress); **estrés por niveles** (CK3): actuar contra el carácter, fracasar, el duelo y las heridas estresan; al cruzar un nivel hay **crisis
+  según carácter** (irascible → arrebato contra quien peor le cae; frágil → hundimiento; resto → retiro) que libera estrés; el estresado evita aún más lo que va contra
+  su naturaleza. **Experiencia** (Voyager): tasa de éxito por tipo de intención y currículo de ambiciones de dos caminos. **Elección** (The Sims): al azar entre las mejores (softmax).
+- **Bus de sucesos + `Vida`**: muerte (duelo proporcional al vínculo, rencor al causante), nacimiento, boda (cumple «casarse»), herida, llegada/partida.
+- **Maestro de juego** (Concordia): resuelve por dentro las intenciones sociales y deja al juego (con sus interruptores) lo que no es suyo.
+- **El reino aprende de ti**: cada veto o aceptación de la Compuerta ajusta `Preferencias`; lo que vetas siempre (≥ 3 veces) deja de proponerse.
+- **Órdenes en lenguaje natural** en `directriz.txt` («quiero paz», «ojo por ojo», «favorece a Ana», «haced una fiesta», «quiero drama/calma»).
+- **`mundo.jsonl`**: agenda, normas, director, cultura, crónica, costumbres, secretos, recuerdos, experiencia, preferencias y prejuicios sobreviven al reinicio
+  (reescritura atómica; un fichero de versión futura no se toca).
+- **`ganchos.txt` + `ganchos.sugeridos.txt`**: observadores de solo lectura sobre métodos que tú confirmes (`ganchos=0` por defecto) para que la vida oiga muertes, bodas y nacimientos reales.
+- El hook alimenta el modelo con **todos** los eventos (antes el freno de 20 s por pawn descartaba datos del modelo afectivo).
+- Simulador: población viva (nacimientos, mayoría de edad, bodas, inmigración, muertes), jugador simulado con gustos, órdenes a mitad de partida y comprobación de ida y vuelta de la persistencia.
+- Config nueva: `vida`, `vida_maestro`, `vida_maestro_dia`, `ordenes`, `ganchos`.
+
 ## 0.4.0 (2026-10-08) — Fase 3 ampliada tras investigar Generative Agents, RimWorld, Project Sid, alife-sdk, AI Town e IAUS
 
 Todo **HECHO-NUBE** (249 tests, simulador) y **NO VERIFICADO en partida**. Nada escribe en el juego. Fuentes, adopciones y limites: `docs/INVESTIGACION.md`.
