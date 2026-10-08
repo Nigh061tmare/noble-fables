@@ -50,6 +50,7 @@ namespace PeceraNF
             _h = new Harmony("pecera.nf");
             try { _h.PatchAll(); }
             catch (Exception e) { Logger.LogError("[Pecera] PatchAll fallo: " + e); Estado.Ev.Fail("hook_opinion", "PatchAll: " + e.Message); }
+            Observadores.Instala(_h);
             foreach (var m in _h.GetPatchedMethods()) Logger.LogInfo("[Pecera] parcheado: " + m.DeclaringType.Name + "." + m.Name);
             Logger.LogInfo("[Pecera] v" + Estado.VERSION + " modelo=" + Estado.Cfg.Str("modelo") + " modo=" + Estado.Cfg.Modo + " datos=" + Estado.Datos);
         }
@@ -126,6 +127,7 @@ namespace PeceraNF
             try
             {
                 if (Estado.Cfg.Bool("afectos")) Estado.Disco.Rewrite("afectos.jsonl", Estado.Afectos.Serializa());
+                Estado.GuardaMundo();
                 if (Estado.Cfg.Bool("memoria") && Estado.Mem.Pawns > 0 && Estado.Disco.Exists("memoria.jsonl"))
                     Estado.Ev.Ok("memoria_persistida", Estado.Mem.Pawns + " pawns");
             }

@@ -149,6 +149,8 @@ namespace PeceraNF
         static void DryRunConsejo(List<string> tipos)
         {
             var consejo = new Consejo(Estado.Afectos);
+            var ord = Estado.Ordenes;      // «favorece a X» en directriz.txt: el consejo le da margen (+0.15)
+            if (ord.Favorecidos.Count > 0) consejo.Favorecido = sol => ord.Favorece(sol, null);
             var metas = Estado.Metas;      // las metas vivas del reino (se reajustan con las metricas en cada informe)
             foreach (string tp in tipos)
             {

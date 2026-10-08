@@ -184,6 +184,7 @@ namespace PeceraNF
                                              "# Formato: Nombre|seguro/riesgo/prohibido|hostil/amistoso/neutro. Solo los 'seguro' se disparan." };
                 foreach (var e in esquemas) sug.Add(CatalogoEsquemas.Sugiere(e));
                 Estado.Disco.Rewrite("esquemas.sugeridos.txt", sug);
+                Estado.Disco.Rewrite("ganchos.sugeridos.txt", Observadores.Sugerencias());
                 UnityEngine.Debug.Log("[Pecera] sonda: " + esquemas.Count + " SchemeType; ver sonda.json y esquemas.sugeridos.txt");
             }
             catch (ReflectionTypeLoadException e) { UnityEngine.Debug.Log("[Pecera] sonda fallo: " + e.Message); }

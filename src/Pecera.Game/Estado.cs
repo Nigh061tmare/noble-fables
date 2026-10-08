@@ -12,7 +12,7 @@ namespace PeceraNF
     //   - Afectos, Secretos, Cronica, Costumbres: SOLO el hilo principal (hook y Update).
     public static class Estado
     {
-        public const string VERSION = "0.2.0";
+        public const string VERSION = "0.5.0";
 
         public static string Datos = "";
         public static PeceraConfig Cfg = PeceraConfig.Parse("");
@@ -40,6 +40,15 @@ namespace PeceraNF
         public static Agenda Agenda;
         public static PresupuestoLlm Presupuesto;
         public static MetasReino Metas = new MetasReino();
+        // v0.5 Vida (solo hilo principal): bus de sucesos, psique, prejuicio de grupo, gustos del jugador, maestro de juego, ordenes.
+        public static BusEventos Eventos = new BusEventos();
+        public static Prejuicios Prejuicios = new Prejuicios();
+        public static Preferencias Prefs = new Preferencias();
+        public static RecuerdosFuertes Fuertes = new RecuerdosFuertes();
+        public static Linaje Linaje = new Linaje();
+        public static MaestroDeJuego Maestro;
+        public static Ordenes Ordenes = new Ordenes();
+        public static string OrdenesTexto = "";
         // Solo hilo principal: se rellenan al escribir el informe y se leen en el hook.
         public static readonly Dictionary<string, string> FaccionDe = new Dictionary<string, string>();
         public static readonly Dictionary<string, Dialecto> Dialectos = new Dictionary<string, Dialecto>();
@@ -120,7 +129,55 @@ namespace PeceraNF
             string esq = Path.Combine(Datos, "esquemas.txt");
             if (File.Exists(esq)) Catalogo = CatalogoEsquemas.Parse(File.ReadAllText(esq, new UTF8Encoding(false)));
             foreach (var a in Catalogo.Avisos) Avisos.Add("esquemas.txt: " + a);
+            IniciaVida();
             CargaDirectriz();
+        }
+
+        // Bus de vida + maestro + persistencia del estado social (mundo.jsonl). Todo interno: nada de esto escribe en el juego.
+        static void IniciaVida()
+        {
+            Maestro = new MaestroDeJuego
+            {
+                Afectos = Afectos, Persona = id => Personas.Get(id), Nombre = id => Ids.Nombre(id), Freno = Freno, Mem = Mem, Fuertes = Fuertes,
+                Secretos = Cfg.Bool("rumores") ? Secretos : null
+            };
+            Vida.Conecta(Eventos, new ContextoVida
+            {
+                Afectos = Afectos, Mem = Mem, Cronica = Cronica, Linaje = Linaje, Fuertes = Fuertes,
+                Persona = id => Personas.Get(id), Nombre = id => Ids.Nombre(id), Vivos = VivosIds
+            });
+            // El reino aprende de tus vetos: cada decision de la Compuerta (vetada o no) alimenta las preferencias.
+            // Compuerta.AlDecidir se invoca fuera de su cerrojo, pero desde la hebra que llama a Veta/Listas: se pasa al hilo principal.
+            Compuerta.AlDecidir = (d, vetada) => { string c = d.Clase, e = d.Etiqueta; Principal.Encola(delegate { Prefs.Registra(c, e, vetada); }); };
+            var es = Social();
+            bool futura;
+            int malas = es.Carga(Disco.ReadLines("mundo.jsonl"), out futura);
+            if (futura) { Avisos.Add("mundo.jsonl es de una version MAS NUEVA del mod: no se carga ni se sobrescribe"); MundoBloqueado = true; }
+            if (malas > 0) Avisos.Add("mundo.jsonl: " + malas + " lineas ilegibles ignoradas");
+            Prejuicios.Atenuacion = Normas.AtenuacionPrejuicio;
+        }
+
+        public static bool MundoBloqueado;
+
+        public static List<string> VivosIds()
+        {
+            var ids = new List<string>();
+            foreach (var f in Fichas.Todas()) ids.Add(f.Id);
+            ids.Sort(StringComparer.Ordinal);
+            return ids;
+        }
+
+        public static EstadoSocial Social()
+        {
+            return new EstadoSocial { Agenda = Agenda, Normas = Normas, Director = Director, Cultura = Cultura, Cronica = Cronica, Costumbres = Costumbres,
+                                      Secretos = Cfg.Bool("rumores") ? Secretos : null, Fuertes = Fuertes, Exp = Maestro != null ? Maestro.Exp : null, Prefs = Prefs, Prejuicios = Prejuicios };
+        }
+
+        // Hilo principal. Reescritura atomica (DiskStorage.Rewrite) de todo el estado social.
+        public static void GuardaMundo()
+        {
+            if (MundoBloqueado || Disco == null) return;
+            Disco.Rewrite("mundo.jsonl", Social().Serializa());
         }
 
         static void Criterios()
@@ -145,7 +202,42 @@ namespace PeceraNF
             Ev.Criterio("peticion_capturada", 1, 0);   // Rey dormido: vimos una peticion real en cola (fase 1)
             Ev.Criterio("peticion_aplicada", 1, 0);    // Rey dormido: aplicamos Complete() real (fase 2)
             Ev.Criterio("informe_escrito", 1, 0);
+            Ev.Criterio("vida_maestro", 5, 0);         // el maestro resolvio conversaciones internas sin excepciones
+            Ev.Criterio("vida_crisis", 1, 0);          // informativa: alguna crisis por estres (sin_datos = nadie llego a 100)
+            Ev.Criterio("vida_suceso", 1, 0);          // un gancho de ganchos.txt publico un suceso de vida real
+            Ev.Criterio("mundo_persistido", 1, 0);
         }
+
+        // Ordenes del soberano en lenguaje natural (solo las lineas sin # de directriz.txt). Mueven normas, director y consejo INTERNOS.
+        static void AplicaOrdenes(string texto)
+        {
+            var sb = new StringBuilder();
+            foreach (var l in texto.Split('\n')) { string t = l.Trim(); if (t.Length > 0 && t[0] != '#' && t[0] != '[') sb.Append(t).Append(' '); }
+            string limpio = sb.ToString().Trim();
+            if (limpio == OrdenesTexto) return;
+            OrdenesTexto = limpio;
+            Ordenes = Ordenes.Parse(limpio);
+            int dia = Gancho.DiaActual();
+            var cambios = new List<string>();
+            Normas.Fuerza(Ordenes.NormaForzada, dia, cambios);
+            foreach (var c in cambios) Cronica.Anota(dia, "orden", c, 6);
+            Prejuicios.Atenuacion = Normas.AtenuacionPrejuicio;
+            if (Director != null)
+            {
+                Director.FiestaPedida = Ordenes.PideFiesta;
+                if (Ordenes.Estilo.HasValue) Director.Estilo = Ordenes.Estilo.Value;
+                var o = Ordenes;
+                Director.Protegido = id => o.Favorece(Ids.Nombre(id), FaccionNombre(id));
+            }
+            if (Ordenes.Entendidas.Count > 0)
+            {
+                string msg = "El soberano ordena: " + string.Join(", ", Ordenes.Entendidas.ToArray());
+                Cronica.Anota(dia, "orden", msg, 6);
+                Avisos.Add(msg);
+            }
+        }
+
+        static string FaccionNombre(string id) { string f; return FaccionDe.TryGetValue(id, out f) ? f : null; }
 
         public static void Escribe(string ruta, string texto)
         {
@@ -172,6 +264,7 @@ namespace PeceraNF
                 _dirFecha = t;
                 _dirTexto = File.ReadAllText(r, new UTF8Encoding(false));
                 Dir = Directrices.Parse(_dirTexto);
+                if (Cfg.Bool("ordenes")) AplicaOrdenes(_dirTexto);
             }
             catch (IOException e) { Avisos.Add("directriz.txt ilegible: " + e.Message); }
         }

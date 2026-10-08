@@ -47,6 +47,13 @@ namespace HarmonyLib
         public Harmony(string id) { }
         public void PatchAll() { }
         public IEnumerable<MethodBase> GetPatchedMethods() { return null; }
+        // API publica de Harmony 2 / HarmonyX (BepInEx 5.4): parche manual.
+        public MethodInfo Patch(MethodBase original, HarmonyMethod prefix = null, HarmonyMethod postfix = null, HarmonyMethod transpiler = null, HarmonyMethod finalizer = null) { return null; }
+    }
+
+    public sealed class HarmonyMethod
+    {
+        public HarmonyMethod(MethodInfo method) { }
     }
 }
 

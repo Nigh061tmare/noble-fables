@@ -382,3 +382,43 @@ namespace Pecera.Tests
         }
     }
 }
+
+namespace Pecera.Tests
+{
+    public class GanchosTests
+    {
+        [Fact]
+        public void Lee_ganchos_txt_y_rechaza_lo_que_no_entiende()
+        {
+            var av = new List<string>();
+            var g = Ganchos.Parse("# comentario\nmuerte = Pawn.Die\n  boda=FamilyManager.Marry  \nfiesta = X.Y\nmuerte = Pawn.Die\nnacimiento = SinPunto\nherida = A.B C\n\n", av);
+            Assert.Equal(2, g.Count);
+            Assert.Equal("muerte", g[0].Tipo); Assert.Equal("Pawn", g[0].Clase); Assert.Equal("Die", g[0].Metodo);
+            Assert.Equal("FamilyManager", g[1].Clase); Assert.Equal("Marry", g[1].Metodo);
+            Assert.Equal(4, av.Count);
+            Assert.Contains(av, a => a.Contains("tipo desconocido"));
+            Assert.Contains(av, a => a.Contains("repetido"));
+            Assert.Empty(Ganchos.Parse(null, av));
+        }
+
+        [Fact]
+        public void Respeta_el_tope_de_ganchos()
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int k = 0; k < Ganchos.Max + 5; k++) sb.Append("trabajo = C.M").Append(k).Append('\n');
+            var av = new List<string>();
+            Assert.Equal(Ganchos.Max, Ganchos.Parse(sb.ToString(), av).Count);
+            Assert.Equal(5, av.Count);
+        }
+
+        [Fact]
+        public void La_sugerencia_por_nombre_es_comentada_y_no_propone_consultas()
+        {
+            Assert.StartsWith("# muerte = Pawn.Die", Ganchos.Sugiere("Pawn", "Die"));
+            Assert.Contains("boda", Ganchos.Sugiere("Fam", "Marry"));
+            Assert.Null(Ganchos.Sugiere("Pawn", "GetBirthday"));
+            Assert.Null(Ganchos.Sugiere("Pawn", "IsInjured"));
+            Assert.Null(Ganchos.Sugiere("Pawn", "Walk"));
+        }
+    }
+}

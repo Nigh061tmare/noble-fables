@@ -36,6 +36,11 @@ Las claves marcadas **escribe en el juego** modifican el estado de la partida. M
 | `agentes_pawns_tick` | `40` | 5 .. 1000 | NO VERIFICADO | Pawns que se recalculan por dia de juego (reparto circular): acota el coste en el hilo principal. |
 | `director_estilo` | `clasico` | texto | NO VERIFICADO | Director de drama (solo informa en agentes.md, no ejecuta nada): ninguno \| calmo \| clasico \| caotico. Mide la tension del reino y sugiere conflicto si hay calma o alivio si hay demasiada tension. |
 | `agentes_burbujas` | `1` | 0 .. 1 | NO VERIFICADO | 1: al adoptar un plan elegido por el LLM, el pawn lo dice en un bocadillo (max 1 por ronda). Solo dibuja. |
+| `vida` | `1` | 0 .. 1 | NO VERIFICADO | 1: vida interior de los pawns (recuerdos fuertes, estres y crisis segun caracter, prejuicio de grupo aprendido de los motivos reales, duelo/bodas/nacimientos si hay ganchos). Solo interno: cambia lo que el mod piensa, dice y planea. |
+| `vida_maestro` | `1` | 0 .. 1 | NO VERIFICADO | 1 (requiere agentes=1): el maestro de juego resuelve por dentro las intenciones sociales de la agenda (charlar, consolar, cortejar...) sobre el modelo afectivo del mod y lo muestra en bocadillos. NO toca la opinion del juego. |
+| `vida_maestro_dia` | `8` | 0 .. 100 | NO VERIFICADO | Tope de conversaciones internas que resuelve el maestro por dia de juego. |
+| `ordenes` | `1` | 0 .. 1 | NO VERIFICADO | 1: lee ordenes en lenguaje natural de directriz.txt («quiero paz», «ojo por ojo», «favorece a Ana», «haced una fiesta», «quiero drama/calma»). Mueven normas, director y consejo internos. |
+| `ganchos` | `0` | 0 .. 1 | NO VERIFICADO | 1: instala observadores de SOLO LECTURA en los metodos que pongas en ganchos.txt (tipo = Clase.Metodo) para que la vida del mod oiga muertes, bodas o nacimientos. La sonda F11 deja ganchos.sugeridos.txt. Parchea metodos del juego (sin escribir estado): apagado hasta que confirmes cada linea. |
 | `rumores` | `0` | 0 .. 1 | NO VERIFICADO | 1: secretos y rumores internos (usa el LLM para inventar secretos). |
 | `sociedad` | `1` | 0 .. 1 | NO VERIFICADO | 1: facciones, lideres y favores calculados internamente (informe, sin escribir). |
 | `cronica` | `1` | 0 .. 1 | NO VERIFICADO | 1: cronica del reino en cronica.md. |

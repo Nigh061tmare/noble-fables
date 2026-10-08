@@ -70,6 +70,36 @@ namespace PeceraNF
             float abs = Math.Abs(delta);
             if (abs < Estado.Cfg.Num("umbral_dato")) return;
 
+            // Todo lo que toca objetos del juego se lee AQUI, en el hilo del juego.
+            if (!_sondaHecha) { _sondaHecha = true; Sonda.PawnUnaVez(pawn); }
+            Pawn otro = PawnDe(of);
+            string a = Nombre(pawn), b = otro != null ? Nombre(otro) : NombreDe(of);
+            string porQue = Razon(reason);
+            string ida = Identidad.Id(pawn, a);
+            string idb = otro != null ? Identidad.Id(otro, b) : "x:" + b;
+            bool rasgo = Habla.EsRasgo(porQue);
+
+            // El MODELO del mundo oye TODOS los eventos (v0.5): antes el freno anti-rafaga de 20 s por pawn tambien
+            // descartaba datos para los afectos y la observacion de intenciones, y el modelo veia una muestra sesgada.
+            if (pawn != null) Mente.Recuerda(ida, pawn);
+            if (otro != null) Mente.Recuerda(idb, otro);
+            Mente.Observa(ida, idb, delta);
+            if (!rasgo && delta > 0) Estado.Cultura.Suceso("comunidad", 0.1);      // trato bueno por un hecho
+            if (Estado.Cfg.Bool("afectos"))
+            {
+                Estado.Afectos.DesdeOpinion(ida, idb, delta, rasgo);
+                Estado.Ev.Ok("afectos_modelo", "");
+            }
+            if (rasgo && Estado.Cfg.Bool("vida"))
+            {
+                // 93 % de los cambios reales de opinion son reacciones a la raza o al alineamiento: es prejuicio de GRUPO.
+                bool alineamiento;
+                string grupo = Prejuicios.GrupoDeMotivo(porQue, out alineamiento);
+                if (grupo != null) Estado.Prejuicios.Anota(ida, idb, grupo, delta, alineamiento);
+            }
+            Estado.Eventos.Publica(new EventoMundo { Tipo = "opinion", A = ida, B = idb, Valor = delta, Texto = porQue, Dia = DiaActual(), Rasgo = rasgo });
+
+            // Lo caro o ruidoso (linea de registro, memoria episodica, rumores, voz) sigue con el freno por pawn.
             int h = pawn != null ? pawn.GetHashCode() : 0;
             long ahora = DateTime.Now.Ticks;
             lock (Ultimo)
@@ -79,26 +109,7 @@ namespace PeceraNF
                 Ultimo[h] = ahora;
                 if (Ultimo.Count > 4000) Ultimo.Clear();
             }
-
-            // Todo lo que toca objetos del juego se lee AQUI, en el hilo del juego.
-            if (!_sondaHecha) { _sondaHecha = true; Sonda.PawnUnaVez(pawn); }
             float? valor = Opinion(pawn, of);
-            Pawn otro = PawnDe(of);
-            string a = Nombre(pawn), b = otro != null ? Nombre(otro) : NombreDe(of);
-            string porQue = Razon(reason);
-            string ida = Identidad.Id(pawn, a);
-            string idb = otro != null ? Identidad.Id(otro, b) : "x:" + b;
-            bool rasgo = Habla.EsRasgo(porQue);
-            if (!rasgo && delta > 0) Estado.Cultura.Suceso("comunidad", 0.1);      // trato bueno por un hecho
-
-            // Modelo afectivo, memoria y rumores (solo memoria interna: no escriben en el juego).
-            if (pawn != null) Mente.Recuerda(ida, pawn);
-            Mente.Observa(ida, idb, delta);
-            if (Estado.Cfg.Bool("afectos"))
-            {
-                Estado.Afectos.DesdeOpinion(ida, idb, delta, rasgo);
-                Estado.Ev.Ok("afectos_modelo", "");
-            }
             string recuerdos = Estado.Cfg.Bool("memoria") ? Recuerdos(ida, a, b, porQue) : "";
             if (Estado.Cfg.Bool("memoria") && abs >= Estado.Cfg.Num("umbral_habla") && !rasgo)
                 Estado.Mem.Registra(ida, "opinion", idb, (delta > 0 ? "empezo a apreciar a " : "empezo a desconfiar de ") + b + " (" + porQue + ")", abs);
