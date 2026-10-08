@@ -115,6 +115,22 @@ namespace Pecera.Tests
         }
 
         [Fact]
+        public void Tras_cerrar_una_peticion_o_venganza_no_se_repite_hasta_pasado_el_enfriamiento()
+        {
+            var ag = new Agenda { EnfriaPedir = 14, EnfriaHostil = 10 };
+            var a = ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Pedir, Categoria = "defensa", Prioridad = 0.5, Texto = "x" }, 1);
+            ag.Marca(a, EstadoIntencion.Fallida);
+            Assert.Null(ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Pedir, Categoria = "cultura", Prioridad = 0.9, Texto = "otra" }, 5));   // cualquier categoria
+            Assert.NotNull(ag.Anade(new Intencion { Pawn = "q", Tipo = TipoIntencion.Pedir, Categoria = "cultura", Prioridad = 0.9, Texto = "otro pawn" }, 5));
+            Assert.NotNull(ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Pedir, Categoria = "cultura", Prioridad = 0.9, Texto = "ya" }, 16));
+            var h = ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Vengarse, Objetivo = "z", Prioridad = 0.5, Texto = "v" }, 20);
+            ag.Marca(h, EstadoIntencion.Hecha);
+            Assert.Null(ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Vengarse, Objetivo = "z", Prioridad = 0.5, Texto = "v" }, 25));
+            Assert.NotNull(ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Vengarse, Objetivo = "z", Prioridad = 0.5, Texto = "v" }, 31));
+            Assert.NotNull(ag.Anade(new Intencion { Pawn = "p", Tipo = TipoIntencion.Charlar, Objetivo = "z", Prioridad = 0.5, Texto = "c" }, 21));    // charlar no se enfria
+        }
+
+        [Fact]
         public void Caduca_lo_vencido_y_poda_lo_cerrado()
         {
             var ag = new Agenda();

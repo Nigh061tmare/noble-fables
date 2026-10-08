@@ -37,10 +37,12 @@ namespace Pecera.Core
         // pierden "social" antes; los neuroticos pierden "seguridad" antes. Nunca salen de [0,1].
         public void Avanza(double dias, Persona p)
         {
-            Pon("descanso", Descanso - 0.18 * dias);
-            Pon("social", Social - (0.05 + 0.08 * p.Extroversion) * dias);
-            Pon("seguridad", Seguridad - (0.01 + 0.03 * p.Neuroticismo) * dias);
-            Pon("autorrealizacion", Autorrealizacion - 0.015 * dias);
+            // Calibrado con el simulador (docs/SIMULACION.md): con ritmos mas duros todos acababan agotados y solos
+            // y el plan se reducia a descansar y charlar. El sueno de cada noche (+0.10) compensa casi todo el cansancio diario.
+            Pon("descanso", Descanso - 0.12 * dias + 0.10 * dias);
+            Pon("social", Social - (0.03 + 0.05 * p.Extroversion) * dias);
+            Pon("seguridad", Seguridad - (0.005 + 0.015 * p.Neuroticismo) * dias);
+            Pon("autorrealizacion", Autorrealizacion - 0.01 * dias);
         }
     }
 

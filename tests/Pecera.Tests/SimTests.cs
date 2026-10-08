@@ -186,3 +186,91 @@ namespace Pecera.Tests
         }
     }
 }
+
+namespace Pecera.Tests
+{
+    // Criterios de aceptacion de los AGENTES con proposito (persona, agenda, plan en lote, conversaciones, narrativa).
+    public class SimAgentesTests
+    {
+        static Resultado Corre(int seed, int dias, Action<SimConfig> ajusta = null)
+        {
+            var c = new SimConfig { Seed = seed, Dias = dias, Pawns = 24 };
+            if (ajusta != null) ajusta(c);
+            return new Mundo(c).Run();
+        }
+
+        [Fact]
+        public void El_presupuesto_del_llm_nunca_se_supera_en_ningun_dia()
+        {
+            for (int seed = 1; seed <= 4; seed++)
+            {
+                var r = Corre(seed, 240, c => c.LlamadasLlmDia = 12);
+                Assert.True(r.MaxLlamadasLlmEnUnDia <= 12, "semilla " + seed + ": " + r.MaxLlamadasLlmEnUnDia);
+                Assert.True(r.LlmLlamadasPlan > 0);
+                Assert.True(r.LlmLlamadasPlan <= 240 * 6, "techo de planificacion (50 %)");
+            }
+        }
+
+        [Fact]
+        public void Los_guardarrailes_paran_al_llm_que_se_equivoca_y_nada_invalido_llega_a_ejecutarse_en_masa()
+        {
+            var r = Corre(2, 360);
+            Assert.True(r.LlmRechazadas > 50, "el LLM simulado inyecta ~20 % de planes invalidos");
+            Assert.True(r.IntencionesInvalidasEjecutadas * 100 <= r.IntencionesHechas + r.IntencionesFallidas,
+                "reevaluadas al ejecutar: " + r.IntencionesInvalidasEjecutadas);
+        }
+
+        [Fact]
+        public void Los_agentes_tienen_proposito_ambiciones_que_avanzan_y_se_cumplen_y_necesidades_sanas()
+        {
+            for (int seed = 1; seed <= 4; seed++)
+            {
+                var r = Corre(seed, 360);
+                Assert.True(r.AmbicionesCumplidas >= 3, "semilla " + seed + ": cumplidas " + r.AmbicionesCumplidas);
+                Assert.True(r.ProgresoMedioAmbiciones > 0.2 && r.ProgresoMedioAmbiciones < 1, "progreso " + r.ProgresoMedioAmbiciones);
+                Assert.InRange(r.NecesidadSocialMedia, 0.2, 0.95);
+                Assert.True(r.NecesidadMinimaMedia > 0.05, "todos agotados: " + r.NecesidadMinimaMedia);
+                Assert.True(r.TiposIntencion.Split(',').Length >= 6, r.TiposIntencion);
+                double tasa = (double)r.ConversacionesExito / Math.Max(1, r.Conversaciones);
+                Assert.InRange(tasa, 0.5, 0.97);
+            }
+        }
+
+        [Fact]
+        public void Con_el_llm_caido_los_agentes_siguen_viviendo_por_reglas()
+        {
+            var r = Corre(3, 240, c => c.ProbLlmCae = 1.0);
+            Assert.Equal(0, r.PlanesLlm); Assert.True(r.LlmFallos > 0); Assert.True(r.PlanesReglas > 1000);
+            Assert.True(r.ProgresoMedioAmbiciones > 0.1);
+            Assert.True(r.MaxDiasSinProgreso <= 10);
+        }
+
+        [Fact]
+        public void No_hay_spam_de_peticiones_gracias_al_enfriamiento()
+        {
+            var r = Corre(1, 360);
+            Assert.True(r.Aprobadas + r.Denegadas < 360 * 6, "peticiones " + (r.Aprobadas + r.Denegadas));
+        }
+
+        [Fact]
+        public void Es_determinista_se_apaga_y_genera_historias()
+        {
+            Assert.Equal(Corre(7, 120).Informe, Corre(7, 120).Informe);
+            var off = Corre(7, 120, c => c.Agentes = false);
+            Assert.Equal(0, off.PlanesReglas); Assert.Equal(0, off.Conversaciones); Assert.Equal(0, off.LlmLlamadasPlan);
+            var on = Corre(7, 240);
+            Assert.True(on.HistoriasGeneradas > 0); Assert.Contains("Historias de", on.CronicaMd);
+        }
+
+        [Fact]
+        public void Los_agentes_no_rompen_la_estabilidad_ni_el_crecimiento_del_reino()
+        {
+            for (int seed = 1; seed <= 4; seed++)
+            {
+                var r = Corre(seed, 360);
+                Assert.True(r.MaxDiasSinProgreso <= 10); Assert.True(r.TasaCambioSigno < 0.10); Assert.True(r.Final.Estabilidad > 0.5);
+                Assert.True(r.Investigadas >= 10);
+            }
+        }
+    }
+}

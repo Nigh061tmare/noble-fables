@@ -72,6 +72,7 @@ namespace Pecera.Core
     {
         public string Ejecutor = "", Objetivo = "", Tipo = "", Razon = "";
         public Talante Talante;
+        public int Intencion;      // id de la Intencion del agente que origino la propuesta (0 = el motor de rencores)
     }
 
     // Convierte rencores y amores sostenidos en propuestas. NO ejecuta nada: devuelve

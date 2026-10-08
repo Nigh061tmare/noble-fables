@@ -11,6 +11,8 @@ namespace Pecera.Sim
     {
         public int Dias = 360, Pawns = 24, Seed = 1;
         public bool Gobierno = true, Esquemas = true, Rumores = true, Afectos = true;
+        public bool Agentes = true;             // agentes con proposito (requiere Ideas): persona, agenda, plan en lote, conversaciones, narrativa
+        public int LlamadasLlmDia = 12, LoteAgentes = 6;    // 12/dia: una llamada cada ~10 s de reloj con dia_segundos=120 (la voz ya usa 1 cada 25 s)
         public bool Ideas = true;               // justicia, sucesion, mentoria, cultura, dialectos, estaciones, suenos, espionaje, deriva
         public double UmbralAprobacion = 0.45;
         public double ProbVeto = 0.10;          // el jugador veta el 10 % de lo que ve
@@ -27,7 +29,7 @@ namespace Pecera.Sim
         public int Rumores, Aprobadas, Denegadas, Esquemas;
     }
 
-    public sealed class Resultado
+    public sealed partial class Resultado
     {
         public readonly List<Semana> Semanas = new List<Semana>();
         public int Aprobadas, Denegadas, Vetadas, EsquemasEjecutados, EsquemasPropuestos, Fugas, Investigadas, Obras;
@@ -54,7 +56,7 @@ namespace Pecera.Sim
     // obras...) son SUPUESTOS del simulador, no medidas del juego real: sirven para
     // comprobar que la logica no se atasca, no oscila y no se desboca, y para afinar
     // umbrales relativos. No predicen valores absolutos de Noble Fates.
-    public sealed class Mundo
+    public sealed partial class Mundo
     {
         readonly SimConfig cfg;
         readonly ManualClock reloj = new ManualClock { Ticks = TimeSpan.TicksPerDay * 365 * 10 };
@@ -137,6 +139,7 @@ namespace Pecera.Sim
             compuerta.FijaTopeDia("juicio", 1);
             compuerta.FijaEnfriamiento("juicio", 3600);
             if (cfg.Ideas) IniciaIdeas();
+            if (cfg.Ideas && cfg.Agentes) IniciaAgentes();
             // El soberano es quien tiene mas carisma.
             soberano = ids.Take(cfg.Ideas ? Math.Min(6, ids.Count) : ids.Count).OrderByDescending(i => fichas.Get(i).Carisma).ThenBy(i => i, StringComparer.Ordinal).First();   // con Ideas, de entre los mayores (tienen familia)
             string[] cat = { "crecimiento", "defensa", "cultura", "economia", "cohesion" };
@@ -170,6 +173,7 @@ namespace Pecera.Sim
             {
                 reloj.Ticks += compuerta.DiaTicks;
                 if (cfg.Ideas) IdeasDiarias();
+                if (cfg.Ideas && cfg.Agentes) AgentesDia();
                 VidaSocial();
                 if (cfg.Afectos) afectos.Avanza(1);
                 if (cfg.Gobierno) GobiernoDia();
@@ -294,7 +298,7 @@ namespace Pecera.Sim
             {
                 if (d.Clase == "peticion") Aplica((Peticion)d.Carga);
                 else if (d.Clase == "investigacion") { if (enCurso == null) enCurso = (OpcionElegible)d.Carga; }
-                else if (d.Clase == "esquema") EjecutaEsquema((PropuestaEsquema)d.Carga);
+                else if (d.Clase == "esquema") { EjecutaEsquema((PropuestaEsquema)d.Carga); CierraIntencionDeEsquema((PropuestaEsquema)d.Carga); }
                 else if (d.Clase == "juicio") EjecutaJuicio((Sentencia)d.Carga);
             }
             reloj.Ticks -= 31 * TimeSpan.TicksPerSecond;
@@ -522,7 +526,8 @@ namespace Pecera.Sim
             Sociedad.AsignaLideres(afectos, fs, id => fichas.Get(id), id => nombres[id]);
             res.FaccionesFinales = fs.Count;
             foreach (var f in fs) cronica.Anota(cfg.Dias - 1, "faccion", f.Nombre + " reune a " + f.Miembros.Count + " personas", 5);
-            res.CronicaMd = cronica.ToMarkdown("Reino simulado");
+            if (cfg.Ideas && cfg.Agentes) CierraAgentes();
+            res.CronicaMd = cronica.ToMarkdown("Reino simulado") + (res.HistoriasMd.Length > 0 ? "\n" + res.HistoriasMd : "");
             res.GrafoDot = Informe.GrafoDot(afectos, ids, id => nombres[id], 0.35);
             var f0 = res.Final;
             double al = 0, fi = 0; int nsec = 0, expuestos = 0;
@@ -560,6 +565,7 @@ namespace Pecera.Sim
                 Fila(sb, "Credo emergente", res.Credo.Length > 0 ? res.Credo : "(aun sin credo)");
                 Fila(sb, "Giros de dialecto (total) / deriva maxima de temperamento", res.GirosDialecto + " / " + Json.Num(res.DerivaMax));
             }
+            if (cfg.Ideas && cfg.Agentes) FilasAgentes(sb);
             sb.Append("\n## Metricas finales\n\n```\n").Append(f0.ToJson()).Append("\n```\n");
             res.Informe = sb.ToString();
         }

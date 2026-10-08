@@ -34,6 +34,10 @@ namespace Pecera.Core
         int diaAltas = -1, sig = 1;
         public int MaxPorPawn = 6;
         public int MaxAltasPorDia = 3;
+        public int Hoy { get; private set; }
+        // Tras cerrar una intencion no se vuelve a proponer la misma durante estos dias (evita el spam de peticiones/venganzas).
+        public int EnfriaPedir = 14, EnfriaHostil = 10, EnfriaCortejo = 3, EnfriaConsolar = 4;
+        readonly Dictionary<string, int> cerradas = new Dictionary<string, int>();
         public int Hechas { get; private set; }
         public int Fallidas { get; private set; }
 
@@ -49,6 +53,9 @@ namespace Pecera.Core
         public Intencion Anade(Intencion i, int dia)
         {
             if (dia != diaAltas) { altasHoy.Clear(); diaAltas = dia; }
+            Hoy = dia;
+            int hasta;
+            if (cerradas.TryGetValue(Clave(i), out hasta) && dia < hasta) return null;
             List<Intencion> l;
             if (!por.TryGetValue(i.Pawn, out l)) { l = new List<Intencion>(); por[i.Pawn] = l; }
             foreach (var x in l)
@@ -86,10 +93,23 @@ namespace Pecera.Core
             return r;
         }
 
+        // Pedir se enfria por pawn (no por categoria): un pawn no pide una obra distinta cada dia.
+        static string Clave(Intencion i) { return i.Tipo == TipoIntencion.Pedir ? i.Pawn + "|Pedir" : i.Pawn + "|" + i.Tipo + "|" + i.Objetivo + "|" + i.Categoria; }
+
+        int Enfria(Intencion i)
+        {
+            if (i.Tipo == TipoIntencion.Pedir) return EnfriaPedir;
+            if (i.Hostil) return EnfriaHostil;
+            if (i.Tipo == TipoIntencion.Cortejar) return EnfriaCortejo;
+            if (i.Tipo == TipoIntencion.Consolar) return EnfriaConsolar;
+            return 0;
+        }
+
         public void Marca(Intencion i, EstadoIntencion e)
         {
             bool antesVivo = i.Estado <= EstadoIntencion.EnCurso;
             i.Estado = e;
+            if (antesVivo && e >= EstadoIntencion.Hecha && Enfria(i) > 0) cerradas[Clave(i)] = Hoy + Enfria(i);
             if (antesVivo && e == EstadoIntencion.Hecha) Hechas++;
             if (antesVivo && e == EstadoIntencion.Fallida) Fallidas++;
         }
@@ -97,6 +117,8 @@ namespace Pecera.Core
         // Caduca lo vencido y poda lo cerrado hace tiempo (memoria acotada).
         public int Caduca(int dia)
         {
+            Hoy = dia;
+            if (cerradas.Count > 2000) { var viejas = new List<string>(); foreach (var kv in cerradas) if (kv.Value <= dia) viejas.Add(kv.Key); foreach (var k in viejas) cerradas.Remove(k); }
             int n = 0;
             foreach (var l in por.Values)
             {
