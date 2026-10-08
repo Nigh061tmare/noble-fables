@@ -28,6 +28,7 @@ dotnet run --project sim/Pecera.Sim -- --doc-config > docs/CONFIG.md   # tras to
 ```
 
 ## Pendiente (por prioridad)
+0. Ver `docs/PLAN_OPUS.md` (fases, tabla de confirmaciones de API A1–A13 y solicitudes al usuario). v0.3.0 = agentes con proposito en Core + simulador; `Mente` solo observa.
 1. Que el usuario ejecute `VERIFICACION_PENDIENTE.md` y devuelva `verificacion.json`, `sonda.json`, `sonda_pawn.json`, `esquemas.sugeridos.txt`.
 2. Con la sonda: adaptadores reales de esquemas (`Acciones.DisparaEsquema`), peticiones, investigacion, planos, misiones, API de tiempo.
 3. Tests de integracion del pipeline del hook (hoy la logica esta en Core; el cableado en `Gancho.cs` solo se compila contra stubs).

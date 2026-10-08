@@ -74,3 +74,15 @@ Modelo con ~20 eventos por pawn, pares activos entre 800 (n=50) y 7.800 (n=400):
 El informe (facciones + metricas + grafo, cada `informe_min` minutos o con F10) corre en el hilo principal: con 200 pawns son ~25 ms
 medidos aqui, es decir, **un tiron de un frame cada 5 minutos** en el juego, sin medir. Si lo notas, sube `informe_min`.
 Los pares que vuelven a su baseline se olvidan (`Avanza`), asi el modelo solo paga por relaciones activas.
+
+## Agentes (v0.3.0)
+
+```
+Plugin.Update (cada dia de juego) ──► Mente.Tick  [hilo principal]
+   ├─ por trozos (agentes_pawns_tick, reparto circular): Reflexiona → Planea (reglas + Valida) → Agenda.Anade → Consolida
+   ├─ si hay presupuesto + LLM sano + cola holgada: PlanLlm.Usuario (lote de agentes_lote pawns)
+   │       └─ Gancho.EncolaLlm ──► hebra unica de LLM ── Llm.Ask ──► Principal.Encola ──► PlanLlm.Parse (Valida) ──► Agenda
+   └─ Gancho (OpinionDelta) ──► Mente.Observa: un evento positivo hacia el objetivo de una intencion social la da por HECHA
+```
+Reglas: `Agenda`, `Personas` y el resto del estado mutable son del hilo principal; la hebra de LLM solo recibe strings y devuelve un string.
+`PresupuestoLlm` y los techos por prioridad evitan que la planificacion se coma a la voz. Ningun camino escribe en el juego.

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0 (2026-10-08) — agentes con proposito (respuesta al PROMPT_OPUS, Fase 0 y 1 en la nube)
+
+Todo **HECHO-NUBE** (tests + simulador, 219 tests) y **NO VERIFICADO en partida**. Nada de esto escribe en el juego.
+- `Persona`, `Agenda`, `Agente` (reflexion → plan → consolida), `Planificador` con guardarrailes (`Valida`) que valen tambien para el LLM, `PlanLlm` en lote,
+  `PresupuestoLlm` (techos por prioridad), `Dialogo` (resultado por reglas, texto por LLM), `Narrador` (historias). Detalle y plan: `docs/PLAN_OPUS.md`.
+- `Game/Mente.cs` (`agentes=1`, apagado por defecto): plan por reglas por trozos, lote al LLM con presupuesto, intenciones dadas por hechas al VER el evento en el juego;
+  salidas `agentes.md` y `historias.md`; burbuja de intencion (max 1 por ronda).
+- Identidad por tokens + unicidad en vivo (`Core/NombreMiembro.cs`); F11 escribe tambien `sonda_mundo.json` (managers de reloj/reino/necesidades + metodos de Pawn).
+- Simulador con agentes (24 pawns, 360 dias, LLM simulado que se equivoca a proposito) y 30 tests de criterios de aceptacion.
+- Calibraciones halladas con el simulador: necesidades (con el ritmo inicial todos acababan agotados), enfriamientos de peticiones/venganzas/consuelos (sin ellos ~2000 peticiones al anio).
+
 ## 0.2.2 (2026-10-08) — traspaso a Opus: se integra el estado real del PC y se endurece el Rey dormido
 
 - Integrado en el repo lo hecho en el PC del usuario (0.2.1 + Rey dormido fases 1 y 2): `Peticiones.cs`, sonda de peticiones, `panel_inicio`,

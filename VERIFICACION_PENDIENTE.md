@@ -105,3 +105,13 @@ compiladas e instaladas (DLL en `plugins/`, tamano ~158 KB).
 2. `sonda.json`, `sonda_pawn.json`, `esquemas.sugeridos.txt`.
 3. Salida de `compilar.ps1` si algo fallo.
 4. El veredicto de `pecera_ab.py`.
+
+
+## Agentes con proposito (v0.3.0) — `agentes=1` (NO escribe en el juego)
+
+1. `config.txt`: `agentes=1` (los demas `agentes_*` con su defecto). Reinicia. Juega 20 min.
+2. Mira `agentes.md` (se reescribe cada `informe_min` min y con **F10**): cada pawn con su rasgo, su ambicion principal con % de progreso y sus 3 intenciones.
+3. `verificacion.json`: `agentes_plan_reglas` ≥ 10 (reglas sin excepciones), `agentes_plan_llm` ≥ 3 (el LLM devuelve planes validos; algun fallo es normal), `agentes_intencion_observada` ≥ 1 (el juego produjo lo esperado).
+4. Si ves un bocadillo con una intencion («Ana corteja a Beto»), cuenta para `bocadillo_dibujado`.
+5. **Sin tirones**: anota si notas un hitch cada `dia_segundos` s (120 por defecto). Si lo hay, baja `agentes_pawns_tick`.
+6. Devuelveme `agentes.md`, `historias.md`, `verificacion.json`, `sonda_pawn.json` y `sonda_mundo.json` (F11).
